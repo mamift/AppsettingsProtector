@@ -11,7 +11,7 @@ namespace AppsettingsProtector.Tests
     public class UnitTest1
     {
         [Fact]
-        public async Task UnprotectTest()
+        public async Task PersistUnprotectTest()
         {
             var provider = DataProtectionProvider.Create(nameof(AppsettingsProtector));
 
@@ -23,16 +23,16 @@ namespace AppsettingsProtector.Tests
 
             var @protected = await File.ReadAllBytesAsync("protected.txt");
 
-            var unprotect = protector.DangerousUnprotect(@protected,true, out var requiresMigration, out var wasRevoked);
+            var unprotectResult = protector.DangerousUnprotect(@protected);
 
-            Assert.NotNull(unprotect);
+            Assert.NotNull(unprotectResult);
             
-            var unprotectedString = Encoding.Default.GetString(unprotect);
+            var unprotectedString = Encoding.Default.GetString(unprotectResult.UnprotectedBytes);
             Assert.Equal(unprotectedString, "iamzim");
         }
 
         [Fact]
-        public async Task ProtectTest()
+        public async Task PersistProtectTest()
         {
             var provider = DataProtectionProvider.Create(nameof(AppsettingsProtector));
             
