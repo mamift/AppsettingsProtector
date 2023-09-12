@@ -1,3 +1,4 @@
+using AppsettingsProtector.Extensions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using ReferenceBlazorApp.Data;
@@ -14,6 +15,8 @@ namespace ReferenceBlazorApp
             builder.Services.AddRazorPages();
             builder.Services.AddServerSideBlazor();
             builder.Services.AddSingleton<WeatherForecastService>();
+
+            builder.Services.AddPersistentEncryptor();
 
             var app = builder.Build();
 

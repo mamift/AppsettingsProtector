@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using AppsettingsProtector.Extensions;
 using Microsoft.Extensions.Configuration;
 
 namespace AppsettingsProtector
@@ -9,6 +10,8 @@ namespace AppsettingsProtector
 
         public override void Load(Stream stream)
         {
+            var bytes = stream.ReadAllBytes();
+
             
         }
     }

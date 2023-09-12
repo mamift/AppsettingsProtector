@@ -8,14 +8,19 @@ using Xunit.Sdk;
 
 namespace AppsettingsProtector.Tests
 {
-    public class UnitTest1
+    public class BaseTester
+    {
+        public static readonly string AppName = nameof(AppsettingsProtector);
+    }
+
+    public class UnitTest1 : BaseTester
     {
         [Fact]
         public async Task PersistUnprotectTest()
         {
-            var provider = DataProtectionProvider.Create(nameof(AppsettingsProtector));
+            var provider = DataProtectionProvider.Create(AppName);
 
-            IPersistedDataProtector protector = provider.GetPersistedDataProtector("AppSettings");
+            IPersistedDataProtector protector = provider.CreatePersistedDataProtector("AppSettings");
 
             if (!File.Exists("protected.txt")) {
                 throw new FalseException("File does not exist!", default);
@@ -34,9 +39,9 @@ namespace AppsettingsProtector.Tests
         [Fact]
         public async Task PersistProtectTest()
         {
-            var provider = DataProtectionProvider.Create(nameof(AppsettingsProtector));
+            var provider = DataProtectionProvider.Create(AppName);
             
-            var protector = provider.GetPersistedDataProtector("AppSettings");
+            var protector = provider.CreatePersistedDataProtector("AppSettings");
 
             byte[] plaintextBytes = Encoding.Default.GetBytes("iamzim");
             var @protected = protector.Protect(plaintextBytes);
