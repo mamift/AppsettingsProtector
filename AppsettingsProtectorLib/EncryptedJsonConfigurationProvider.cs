@@ -19,25 +19,41 @@ namespace AppsettingsProtector
         {
             if (_encryptor == null) throw new ArgumentNullException(nameof(_encryptor), "Encryptor was never initialised!");
 
-            var bytes = stream.ReadAllBytes();
+            var bytes = stream.ReadAsBytesToEnd();
             var unprotectResult = _encryptor.UnprotectBytes(bytes);
 
-            var asString = Encoding.Default.GetString(unprotectResult.UnprotectedBytes);
+            string asString;
+            // failed might be because it's not encrypted
+            if (!unprotectResult.Success) {
+                asString = stream.ReadAsStringToEnd();
+            }
+            else {
+                asString = Encoding.Default.GetString(unprotectResult.UnprotectedBytes);
+            }
+
+            Data = JsonConfigurationDictionaryParser.Parse(asString)!;
         }
     }
 
     public class EncryptedJsonConfigurationSource : FileConfigurationSource
     {
-        private readonly IEncryptor? _encryptor;
-        public EncryptedJsonConfigurationSource(IEncryptor encryptor)
+        private IEncryptor? _encryptor;
+
+        public IEncryptor? Encryptor
         {
-            _encryptor = encryptor ?? throw new ArgumentNullException(nameof(encryptor));
+            get => _encryptor;
+            set => SetEncryptor(value);
+        }
+
+        private void SetEncryptor(IEncryptor? value)
+        {
+            _encryptor = value;
         }
 
         public override IConfigurationProvider Build(IConfigurationBuilder builder)
         {
             EnsureDefaults(builder);
-            var theEncryptor = _encryptor ?? throw new InvalidOperationException("Encryptor was never initialised!");
+            var theEncryptor = Encryptor ?? throw new InvalidOperationException("Encryptor was never initialised!");
             return new EncryptedJsonConfigurationProvider(this, theEncryptor);
         }
     }

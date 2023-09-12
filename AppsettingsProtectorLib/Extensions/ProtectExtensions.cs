@@ -17,7 +17,7 @@ public static class ProtectExtensions
     {
         var unprotect = protector.DangerousUnprotect(@protected,true, out var requiresMigration, out var wasRevoked);
 
-        return new UnprotectResult(WasDangerous: true, RequiresMigration: requiresMigration, WasRevoked: wasRevoked, UnprotectedBytes: unprotect);
+        return new UnprotectResult(WasDangerous: true, RequiresMigration: requiresMigration, WasRevoked: wasRevoked, UnprotectedBytes: unprotect, Success: unprotect.Length > 0);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,6 +1,4 @@
 using AppsettingsProtector.Extensions;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
 using ReferenceBlazorApp.Data;
 
 namespace ReferenceBlazorApp
@@ -16,7 +14,11 @@ namespace ReferenceBlazorApp
             builder.Services.AddServerSideBlazor();
             builder.Services.AddSingleton<WeatherForecastService>();
 
-            builder.Services.AddPersistentEncryptor();
+            builder.Services.AddPersistentEncryptor(out var encryptor);
+            builder.Configuration.AddEncryptedJsonFile(source => {
+                source.Path = "appsettings.json";
+                source.Encryptor = encryptor;
+            });
 
             var app = builder.Build();
 

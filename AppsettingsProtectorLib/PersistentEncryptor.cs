@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Security.Cryptography;
 using AppsettingsProtector.Extensions;
 using Microsoft.AspNetCore.DataProtection;
 
@@ -15,22 +17,32 @@ public interface IEncryptor
 
 public class PersistentEncryptor : IEncryptor
 {
-    private readonly IPersistedDataProtector _persistedDataProtector;
+    protected readonly IPersistedDataProtector PersistedDataProtector;
 
     public PersistentEncryptor(IPersistedDataProtector provider)
     {
-        _persistedDataProtector = provider;
+        PersistedDataProtector = provider;
     }
 
     public virtual UnprotectResult UnprotectFileContents(string filePath)
     {
         var fileBytes = File.ReadAllBytes(filePath);
-        return _persistedDataProtector.DangerousUnprotect(fileBytes);
+        try {
+            return PersistedDataProtector.DangerousUnprotect(fileBytes);
+        }
+        catch (CryptographicException ce) {
+            return UnprotectResult.Default;
+        }
     }
 
     public UnprotectResult UnprotectBytes(byte[] bytes)
     {
-        return _persistedDataProtector.DangerousUnprotect(bytes);
+        try {
+            return PersistedDataProtector.DangerousUnprotect(bytes);
+        } 
+        catch (CryptographicException ce) {
+            return UnprotectResult.Default;
+        }
     }
 
     public virtual void UnprotectFileAndSave(string srcFilePath, string? destinationFilePath = null)
@@ -43,7 +55,7 @@ public class PersistentEncryptor : IEncryptor
     public virtual byte[] ProtectFileContents(string filePath)
     {
         var fileBytes = File.ReadAllBytes(filePath);
-        return _persistedDataProtector.Protect(fileBytes);
+        return PersistedDataProtector.Protect(fileBytes);
     }
 
     public virtual void ProtectFileAndSave(string srcFilePath, string? destinationFilePath = null)

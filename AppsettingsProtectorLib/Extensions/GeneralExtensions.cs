@@ -4,7 +4,16 @@ namespace AppsettingsProtector.Extensions;
 
 public static class GeneralExtensions
 {
-    public static byte[] ReadAllBytes(this Stream input)
+    public static string ReadAsStringToEnd(this Stream input)
+    {
+        if (input.Position != default) {
+            input.Position = 0;
+        }
+        var reader = new StreamReader(input);
+        return reader.ReadToEnd();
+    }
+
+    public static byte[] ReadAsBytesToEnd(this Stream input)
     {
         if (input.Position != default) {
             input.Position = 0;
