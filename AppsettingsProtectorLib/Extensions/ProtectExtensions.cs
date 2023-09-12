@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+using System.Text;
 using Microsoft.AspNetCore.DataProtection;
 
 namespace AppsettingsProtector.Extensions;
@@ -21,6 +22,18 @@ public static class ProtectExtensions
             WasRevoked = wasRevoked,
             UnprotectedBytes = unprotect
         };
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static byte[] ToDefaultEncodingBytes(this string theString)
+    {
+        return Encoding.Default.GetBytes(theString);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string? ToDefaultEncodingString(this byte[] bytes)
+    {
+        return Encoding.Default.GetString(bytes);
     }
 }
 
