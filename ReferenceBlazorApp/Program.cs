@@ -23,6 +23,11 @@ namespace ReferenceBlazorApp
                 throw new ArgumentNullException(nameof(secret));
             }
 
+            var googleConnectionString = builder.Configuration.GetConnectionString("Google");
+            ArgumentNullException.ThrowIfNull(googleConnectionString);
+            var microsoftConnectionString = builder.Configuration.GetConnectionString("Microsoft");
+            ArgumentNullException.ThrowIfNull(microsoftConnectionString);
+
             // Add services to the container.
             builder.Services.AddRazorPages();
             builder.Services.AddServerSideBlazor();

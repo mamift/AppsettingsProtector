@@ -38,10 +38,17 @@ public record UnprotectResult<TData>(
             UnprotectedData = default(TData)
         };
 
-    public static UnprotectResult WithError(Exception error)
+    public static UnprotectResult<TData?> WithError(Exception error)
     {
         return new(false, false, false, false, error) {
-            UnprotectedData = Array.Empty<byte>()
+            UnprotectedData = default(TData)
+        };
+    }
+    
+    public static UnprotectResult<TData> WithSuccessData(TData data)
+    {
+        return new(false, false, false, true, null) {
+            UnprotectedData = data
         };
     }
 

@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json.Nodes;
 using AppsettingsProtector.Extensions;
 using Microsoft.Extensions.Configuration;
+using OneOf;
 
 namespace AppsettingsProtector
 {
@@ -27,11 +28,18 @@ namespace AppsettingsProtector
                 : throw new InvalidOperationException("Unable to load protected JSON file - Path was not set in source file configuration provider."))!;
 
             var bytes = stream.ReadAsBytesToEnd();
-            var unprotectResult = _encryptor.UnprotectBytes(bytes);
+            OneOf<UnprotectResult, UnprotectResult<string>> unprotectResult;
+
+            if (_encryptor is IPersistentBase64Encryptor base64Encryptor) {
+                unprotectResult = base64Encryptor.UnprotectBytesAsBase64String(bytes);
+            }
+            else {
+                unprotectResult = _encryptor.UnprotectBytes(bytes);
+            }
 
             string asString;
             // failed might be because it's not encrypted
-            if (!unprotectResult.Success) {
+            if (!unprotectResult.Match(b => b.Success, s => s.Success)) {
                 asString = stream.ReadAsStringToEnd();
                 // check if the string is valid json
                 var _ = JsonNode.Parse(asString);
@@ -41,7 +49,7 @@ namespace AppsettingsProtector
                 }
             }
             else {
-                asString = Encoding.Default.GetString(unprotectResult.UnprotectedData);
+                asString = unprotectResult.Match(b => b.UnprotectedData.ToDefaultEncodingString(), s => s.UnprotectedData);
             }
 
             Data = JsonConfigurationDictionaryParser.Parse(asString)!;

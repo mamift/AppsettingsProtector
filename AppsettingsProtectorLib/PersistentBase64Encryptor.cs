@@ -20,7 +20,8 @@ public interface IPersistentBase64Encryptor : IPersistentEncryptor
     /// </summary>
     /// <param name="base64Text"></param>
     /// <returns></returns>
-    UnprotectResult UnprotectBase64String(string base64Text);
+    UnprotectResult<string> UnprotectBase64String(string base64Text);
+    UnprotectResult<string> UnprotectBytesAsBase64String(byte[] bytes);
 }
 
 public class PersistentBase64Encryptor: PersistentEncryptor, IPersistentBase64Encryptor
@@ -44,10 +45,18 @@ public class PersistentBase64Encryptor: PersistentEncryptor, IPersistentBase64En
         return Convert.ToBase64String(baseInstance, _base64FormattingOptions);
     }
 
-    public UnprotectResult UnprotectBase64String(string base64Text)
+    public UnprotectResult<string> UnprotectBase64String(string base64Text)
     {
         var bytesFromBase64String = Convert.FromBase64String(base64Text);
-        return base.UnprotectBytes(bytesFromBase64String);
+        var unprotectResult = base.UnprotectBytes(bytesFromBase64String);
+        return UnprotectResult<string>.WithSuccessData(unprotectResult.UnprotectedData.ToDefaultEncodingString());
+    }
+
+    public UnprotectResult<string> UnprotectBytesAsBase64String(byte[] bytes)
+    {
+        var unprotectResult = base.UnprotectBytes(bytes);
+        var base64String = Convert.ToBase64String(unprotectResult.UnprotectedData);
+        return UnprotectResult<string>.WithSuccessData(base64String);
     }
 
     public override void ProtectFileAndSave(string srcFilePath, string? destinationFilePath = null)
@@ -64,7 +73,6 @@ public class PersistentBase64Encryptor: PersistentEncryptor, IPersistentBase64En
         var unprotectResult = UnprotectBase64String(protectedBase64Text);
         if (unprotectResult is { Success: false, Exception: not null }) throw unprotectResult.Exception;
         var filePath = destinationFilePath ?? srcFilePath;
-        var defaultEncodingString = unprotectResult.UnprotectedData.ToDefaultEncodingString();
-        File.WriteAllText(filePath, defaultEncodingString);
+        File.WriteAllText(filePath, unprotectResult.UnprotectedData);
     }
 }

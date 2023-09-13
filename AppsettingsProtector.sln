@@ -5,11 +5,11 @@ VisualStudioVersion = 17.4.33927.135
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppsettingsProtectorLib", "AppsettingsProtectorLib\AppsettingsProtectorLib.csproj", "{D2A4CC38-ED46-4092-869B-C3D7F32B6F9A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppsettingsProtector.Tests", "AppsettingsProtector.Tests\AppsettingsProtector.Tests.csproj", "{1166927D-C8E0-462C-8521-ECC4A78746FF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppsettingsProtector.Tests", "AppsettingsProtector.Tests\AppsettingsProtector.Tests.csproj", "{1166927D-C8E0-462C-8521-ECC4A78746FF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Reference implementations", "Reference implementations", "{D04649A6-2D89-4A3F-9B11-F0FCABBBB5DF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReferenceBlazorApp", "ReferenceBlazorApp\ReferenceBlazorApp.csproj", "{9C602426-66E6-4637-8D2A-0E2C352E6A38}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ReferenceBlazorApp", "ReferenceBlazorApp\ReferenceBlazorApp.csproj", "{9C602426-66E6-4637-8D2A-0E2C352E6A38}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
