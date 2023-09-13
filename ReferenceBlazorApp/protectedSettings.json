@@ -1,3 +1,7 @@
 {
-  "secret": "my precious!"
+  "secret": "my precious!",
+  "ConnectionStrings": {
+    "Google": "https://google.com",
+    "Microsoft": "https://microsoft.com"
+  } 
 }
