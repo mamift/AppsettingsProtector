@@ -31,7 +31,8 @@ namespace AppsettingsProtector
             OneOf<UnprotectResult, UnprotectResult<string?>> unprotectResult;
 
             if (_encryptor is IPersistentBase64Encryptor base64Encryptor) {
-                unprotectResult = base64Encryptor.UnprotectBase64String(bytes.ToBase64String());
+                var base64Str = bytes.ToDefaultEncodingString();
+                unprotectResult = base64Encryptor.UnprotectBase64String(base64Str);
             }
             else {
                 unprotectResult = _encryptor.UnprotectBytes(bytes);
@@ -54,7 +55,8 @@ namespace AppsettingsProtector
                 }
             }
             else {
-                asString = unprotectResult.Match(b => b.UnprotectedData.ToDefaultEncodingString(), s => s.UnprotectedData);
+                string? matchedString = unprotectResult.Match(b => b.UnprotectedData.ToDefaultEncodingString(), s => s.UnprotectedData);
+                asString = matchedString;
             }
 
             Data = JsonConfigurationDictionaryParser.Parse(asString)!;

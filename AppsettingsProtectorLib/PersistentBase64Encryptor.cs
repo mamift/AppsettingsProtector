@@ -59,12 +59,12 @@ public class PersistentBase64Encryptor: PersistentEncryptor, IPersistentBase64En
         if (!ur.Success) {
             return UnprotectResult<string?>.WithError(ur.Exception);
         }
-        var base64String = Convert.ToBase64String(ur.UnprotectedData);
+        var decodedString = ur.UnprotectedData.ToDefaultEncodingString();
 
-        if (base64String.Length <= 0)
-            return UnprotectResult<string?>.WithError(new Exception("Unspecified error - decoded base64 string was empty"));
+        if (string.IsNullOrWhiteSpace(decodedString))
+            return UnprotectResult<string?>.WithError(new Exception("Unspecified error - decoded string was empty"));
 
-        return UnprotectResult<string?>.WithSuccessData(base64String);
+        return UnprotectResult<string?>.WithSuccessData(decodedString);
     }
 
     public UnprotectResult<string?> UnprotectBytesFromBase64String(byte[] bytes)
