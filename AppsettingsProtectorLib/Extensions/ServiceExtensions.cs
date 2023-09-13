@@ -11,7 +11,7 @@ public static class ServiceExtensions
     /// Registers the <see cref="PersistentEncryptor"/> to the service collection, using the <see cref="IEncryptor"/> interface.
     /// </summary>
     /// <param name="collection"></param>
-    /// <param name="startupEncryptor"></param>
+    /// <param name="startupEncryptor">Will return an initial <see cref=""/></param>
     /// <param name="purpose">The DPAPI provides a separate purpose as a string; which allows creating multiple providers that can separately encrypt/decrypt their own categories of files.</param>
     /// <param name="withDpApi">Also invoke the <see cref="DataProtectionServiceCollectionExtensions.AddDataProtectionServices"/> extension method. Set this to false if you need to invoke it earlier than there.</param>
     /// <param name="lifetime"></param>
@@ -38,8 +38,7 @@ public static class ServiceExtensions
         }
 
         // returns a single instance that can be used for startup logic
-        var sp = collection.BuildServiceProvider();
-        startupEncryptor = sp.GetRequiredService<IEncryptor>();
+        startupEncryptor = PersistentEncryptorFactory(collection.BuildServiceProvider());
 
         return collection;
 

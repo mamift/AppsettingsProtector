@@ -9,16 +9,17 @@ namespace ReferenceBlazorApp
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Services.AddPersistentEncryptor(out var startupEncryptor);
+            builder.Configuration.AddEncryptedJsonFile(source => {
+                source.Path = Path.Combine(Environment.CurrentDirectory, "appsettings.json");
+                source.Encryptor = startupEncryptor;
+                source.TryEncryptOnDecryptFailure = true; // this is true anyway, but code is here to demonstrate the api exists
+            });
+
             // Add services to the container.
             builder.Services.AddRazorPages();
             builder.Services.AddServerSideBlazor();
             builder.Services.AddSingleton<WeatherForecastService>();
-
-            builder.Services.AddPersistentEncryptor(out var encryptor);
-            builder.Configuration.AddEncryptedJsonFile(source => {
-                source.Path = "appsettings.json";
-                source.Encryptor = encryptor;
-            });
 
             var app = builder.Build();
 

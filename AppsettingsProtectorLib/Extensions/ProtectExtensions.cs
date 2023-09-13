@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.DataProtection;
 
@@ -27,7 +26,7 @@ public static class ProtectExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string? ToDefaultEncodingString(this byte[] bytes)
+    public static string ToDefaultEncodingString(this byte[] bytes)
     {
         return Encoding.Default.GetString(bytes);
     }
