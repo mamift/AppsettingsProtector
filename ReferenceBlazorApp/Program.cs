@@ -11,7 +11,7 @@ namespace ReferenceBlazorApp
 
             builder.Services.AddPersistentEncryptor(out var startupEncryptor);
             builder.Configuration.AddEncryptedJsonFile(source => {
-                source.Path = Path.Combine(Environment.CurrentDirectory, "appsettings.json");
+                source.Path = Path.Combine(Environment.CurrentDirectory, "protectedSettings.json");
                 source.Encryptor = startupEncryptor;
                 source.TryEncryptOnDecryptFailure = true; // this is true anyway, but code is here to demonstrate the api exists
             });
