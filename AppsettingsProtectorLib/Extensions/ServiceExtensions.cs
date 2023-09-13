@@ -8,7 +8,7 @@ namespace AppsettingsProtector.Extensions;
 public static class ServiceExtensions
 {
     /// <summary>
-    /// Registers the <see cref="PersistentEncryptor"/> to the service collection, using the <see cref="IPersistentEncryptor"/> interface.
+    /// Registers an <see cref="IPersistentEncryptor"/> to the service collection, with given type params.
     /// </summary>
     /// <param name="collection"></param>
     /// <param name="startupEncryptor">Will return an initial <see cref="IPersistentEncryptor"/> that can be used inside startup methods.</param>
@@ -49,7 +49,7 @@ public static class ServiceExtensions
         {
             var dataProvider = provider.GetRequiredService<IDataProtectionProvider>();
             var protector = dataProvider.CreatePersistedDataProtector(purpose);
-            var instance = Activator.CreateInstance(typeof(TEncryptorImplTypeInner), args: new[] { protector });
+            var instance = Activator.CreateInstance(typeof(TEncryptorImplTypeInner), args: new object[] { protector });
             return (TEncryptorImplType)instance;
         }
     }
