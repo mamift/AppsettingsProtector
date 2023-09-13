@@ -32,7 +32,7 @@ namespace AppsettingsProtector.Tests
 
             Assert.NotNull(unprotectResult);
             
-            var unprotectedString = Encoding.Default.GetString(unprotectResult.UnprotectedBytes);
+            var unprotectedString = Encoding.Default.GetString(unprotectResult.UnprotectedData);
             Assert.Equal(unprotectedString, "iamzim");
         }
 

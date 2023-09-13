@@ -20,7 +20,7 @@ public interface IPersistentBase64Encryptor : IPersistentEncryptor
     /// </summary>
     /// <param name="base64Text"></param>
     /// <returns></returns>
-    string UnprotectBase64String(string base64Text);
+    UnprotectResult UnprotectBase64String(string base64Text);
 }
 
 public class PersistentBase64Encryptor: PersistentEncryptor, IPersistentBase64Encryptor
@@ -44,12 +44,10 @@ public class PersistentBase64Encryptor: PersistentEncryptor, IPersistentBase64En
         return Convert.ToBase64String(baseInstance, _base64FormattingOptions);
     }
 
-    public string UnprotectBase64String(string base64Text)
+    public UnprotectResult UnprotectBase64String(string base64Text)
     {
         var bytesFromBase64String = Convert.FromBase64String(base64Text);
-        var unprotected = base.UnprotectBytes(bytesFromBase64String);
-
-        return unprotected.UnprotectedBytes.ToDefaultEncodingString();
+        return base.UnprotectBytes(bytesFromBase64String);
     }
 
     public override void ProtectFileAndSave(string srcFilePath, string? destinationFilePath = null)
@@ -63,11 +61,10 @@ public class PersistentBase64Encryptor: PersistentEncryptor, IPersistentBase64En
     public override void UnprotectFileAndSave(string srcFilePath, string? destinationFilePath = null)
     {
         var protectedBase64Text = File.ReadAllText(srcFilePath);
-        var protectedBytes = Convert.FromBase64String(protectedBase64Text);
-        var unprotectResult = UnprotectBytes(protectedBytes);
+        var unprotectResult = UnprotectBase64String(protectedBase64Text);
         if (unprotectResult is { Success: false, Exception: not null }) throw unprotectResult.Exception;
         var filePath = destinationFilePath ?? srcFilePath;
-        var defaultEncodingString = unprotectResult.UnprotectedBytes.ToDefaultEncodingString();
+        var defaultEncodingString = unprotectResult.UnprotectedData.ToDefaultEncodingString();
         File.WriteAllText(filePath, defaultEncodingString);
     }
 }

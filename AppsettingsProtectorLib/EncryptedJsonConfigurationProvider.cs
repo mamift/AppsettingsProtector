@@ -41,7 +41,7 @@ namespace AppsettingsProtector
                 }
             }
             else {
-                asString = Encoding.Default.GetString(unprotectResult.UnprotectedBytes);
+                asString = Encoding.Default.GetString(unprotectResult.UnprotectedData);
             }
 
             Data = JsonConfigurationDictionaryParser.Parse(asString)!;

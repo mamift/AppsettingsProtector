@@ -84,7 +84,7 @@ public class PersistentEncryptor : IPersistentEncryptor
         var unprotectResult = UnprotectFileContents(srcFilePath);
         if (unprotectResult is { Success: false, Exception: not null }) throw unprotectResult.Exception;
         var filePath = destinationFilePath ?? srcFilePath;
-        File.WriteAllBytes(filePath, unprotectResult.UnprotectedBytes);
+        File.WriteAllBytes(filePath, unprotectResult.UnprotectedData);
     }
 
     public virtual byte[] ProtectFileContents(string filePath)
