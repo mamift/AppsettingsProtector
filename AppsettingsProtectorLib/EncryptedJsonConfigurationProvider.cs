@@ -22,8 +22,9 @@ namespace AppsettingsProtector
         public override void Load(Stream stream)
         {
             if (_encryptor == null) throw new ArgumentNullException(nameof(_encryptor), "Encryptor was never initialised!");
-            string srcFilePath = Source.Path ?? throw new InvalidOperationException("Unable to encrypt - Path was not set in source file configuration provider.");
-            if (!Path.IsPathRooted(srcFilePath)) throw new InvalidOperationException("Source path of the JSON config file should be absolute.");
+            string srcFilePath = (!string.IsNullOrWhiteSpace(Source.Path)
+                ? Source.Path
+                : throw new InvalidOperationException("Unable to load protected JSON file - Path was not set in source file configuration provider."))!;
 
             var bytes = stream.ReadAsBytesToEnd();
             var unprotectResult = _encryptor.UnprotectBytes(bytes);

@@ -8,45 +8,49 @@ namespace AppsettingsProtector.Extensions;
 public static class ServiceExtensions
 {
     /// <summary>
-    /// Registers the <see cref="PersistentEncryptor"/> to the service collection, using the <see cref="IEncryptor"/> interface.
+    /// Registers the <see cref="PersistentEncryptor"/> to the service collection, using the <see cref="IPersistentEncryptor"/> interface.
     /// </summary>
     /// <param name="collection"></param>
-    /// <param name="startupEncryptor">Will return an initial <see cref=""/></param>
+    /// <param name="startupEncryptor">Will return an initial <see cref="IPersistentEncryptor"/> that can be used inside startup methods.</param>
     /// <param name="purpose">The DPAPI provides a separate purpose as a string; which allows creating multiple providers that can separately encrypt/decrypt their own categories of files.</param>
     /// <param name="withDpApi">Also invoke the <see cref="DataProtectionServiceCollectionExtensions.AddDataProtectionServices"/> extension method. Set this to false if you need to invoke it earlier than there.</param>
     /// <param name="lifetime"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public static IServiceCollection AddPersistentEncryptor(this IServiceCollection collection, out IEncryptor startupEncryptor, 
-        string purpose = "PersistentEncryption", bool withDpApi = true, ServiceLifetime lifetime = ServiceLifetime.Scoped)
+    public static IServiceCollection AddPersistentEncryptor<TEncryptorInterfaceType, TEncryptorImplType>(this IServiceCollection collection, out IPersistentEncryptor startupEncryptor, 
+        string purpose = "ProtectedAppSettings", bool withDpApi = true, ServiceLifetime lifetime = ServiceLifetime.Scoped)
+        where TEncryptorInterfaceType : class, IPersistentEncryptor
+        where TEncryptorImplType: class, TEncryptorInterfaceType
     {
         if (purpose == null) throw new ArgumentNullException(nameof(purpose));
         if (withDpApi) collection.AddDataProtection();
 
         switch (lifetime) {
             case ServiceLifetime.Scoped:
-                collection.AddScoped<IEncryptor, PersistentEncryptor>(PersistentEncryptorFactory);
+                collection.AddScoped<TEncryptorInterfaceType, TEncryptorImplType>(PersistentEncryptorFactory<TEncryptorImplType>);
                 break;
 
             case ServiceLifetime.Singleton:
-                collection.AddSingleton<IEncryptor, PersistentEncryptor>(PersistentEncryptorFactory);
+                collection.AddSingleton<TEncryptorInterfaceType, TEncryptorImplType>(PersistentEncryptorFactory<TEncryptorImplType>);
                 break;
 
             default:
-                collection.AddTransient<IEncryptor, PersistentEncryptor>(PersistentEncryptorFactory);
+                collection.AddTransient<TEncryptorInterfaceType, TEncryptorImplType>(PersistentEncryptorFactory<TEncryptorImplType>);
                 break;
         }
 
         // returns a single instance that can be used for startup logic
-        startupEncryptor = PersistentEncryptorFactory(collection.BuildServiceProvider());
+        startupEncryptor = PersistentEncryptorFactory<TEncryptorImplType>(collection.BuildServiceProvider());
 
         return collection;
 
-        PersistentEncryptor PersistentEncryptorFactory(IServiceProvider provider)
+        TEncryptorImplType PersistentEncryptorFactory<TEncryptorImplTypeInner>(IServiceProvider provider)
+        where TEncryptorImplTypeInner: class, TEncryptorInterfaceType
         {
             var dataProvider = provider.GetRequiredService<IDataProtectionProvider>();
             var protector = dataProvider.CreatePersistedDataProtector(purpose);
-            return new PersistentEncryptor(protector);
+            var instance = Activator.CreateInstance(typeof(TEncryptorImplTypeInner), args: new[] { protector });
+            return (TEncryptorImplType)instance;
         }
     }
 

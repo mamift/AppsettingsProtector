@@ -33,6 +33,9 @@ public interface IEncryptor
 /// </summary>
 public interface IPersistentEncryptor: IEncryptor { }
 
+/// <summary>
+/// Requires an instance of an <see cref="IPersistedDataProtector"/>.
+/// </summary>
 public class PersistentEncryptor : IPersistentEncryptor
 {
     protected readonly IPersistedDataProtector PersistedDataProtector;
@@ -49,7 +52,7 @@ public class PersistentEncryptor : IPersistentEncryptor
             return PersistedDataProtector.DangerousUnprotect(fileBytes);
         }
         catch (CryptographicException ce) {
-            return UnprotectResult.Default;
+            return UnprotectResult.WithError(ce);
         }
     }
 
@@ -59,26 +62,27 @@ public class PersistentEncryptor : IPersistentEncryptor
     /// </summary>
     /// <param name="plainText"></param>
     /// <returns></returns>
-    public byte[] ProtectString(string plainText)
+    public virtual byte[] ProtectString(string plainText)
     {
         var stringBytes = Encoding.Default.GetBytes(plainText);
         var @protected = PersistedDataProtector.Protect(stringBytes);
         return @protected;
     }
 
-    public UnprotectResult UnprotectBytes(byte[] bytes)
+    public virtual UnprotectResult UnprotectBytes(byte[] bytes)
     {
         try {
             return PersistedDataProtector.DangerousUnprotect(bytes);
         } 
         catch (CryptographicException ce) {
-            return UnprotectResult.Default;
+            return UnprotectResult.WithError(ce);
         }
     }
 
     public virtual void UnprotectFileAndSave(string srcFilePath, string? destinationFilePath = null)
     {
         var unprotectResult = UnprotectFileContents(srcFilePath);
+        if (unprotectResult is { Success: false, Exception: not null }) throw unprotectResult.Exception;
         var filePath = destinationFilePath ?? srcFilePath;
         File.WriteAllBytes(filePath, unprotectResult.UnprotectedBytes);
     }

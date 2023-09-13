@@ -6,6 +6,12 @@ namespace AppsettingsProtector.Extensions;
 
 public static class ProtectExtensions
 {
+    /// <summary>
+    /// Will instantiate a new instance of a data protector using the <see cref="IPersistedDataProtector"/> interface.
+    /// </summary>
+    /// <param name="provider"></param>
+    /// <param name="purpose"></param>
+    /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IPersistedDataProtector CreatePersistedDataProtector(this IDataProtectionProvider provider, string purpose)
     {
@@ -16,7 +22,8 @@ public static class ProtectExtensions
     {
         var unprotect = protector.DangerousUnprotect(@protected,true, out var requiresMigration, out var wasRevoked);
 
-        return new UnprotectResult(WasDangerous: true, RequiresMigration: requiresMigration, WasRevoked: wasRevoked, UnprotectedBytes: unprotect, Success: unprotect.Length > 0);
+        return new UnprotectResult(WasDangerous: true, RequiresMigration: requiresMigration, WasRevoked: wasRevoked, UnprotectedBytes: unprotect, 
+            Success: unprotect.Length > 0, Exception: null);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

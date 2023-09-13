@@ -1,11 +1,15 @@
 ﻿using System;
-using System.ComponentModel;
 
 namespace AppsettingsProtector;
 
 public record UnprotectResult(
-    byte[] UnprotectedBytes, bool WasDangerous, bool RequiresMigration, bool WasRevoked, bool Success)
+    byte[] UnprotectedBytes, bool WasDangerous, bool RequiresMigration, bool WasRevoked, bool Success, Exception? Exception)
 {
-    public static readonly UnprotectResult Default =
-        new UnprotectResult(Array.Empty<byte>(), false, false, false, false);
+    public static readonly UnprotectResult Default = 
+        new(Array.Empty<byte>(), false, false, false, false, null);
+
+    public static UnprotectResult WithError(Exception error)
+    {
+        return new(Array.Empty<byte>(), false, false, false, false, error);
+    }
 }

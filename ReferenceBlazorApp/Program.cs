@@ -1,4 +1,6 @@
+using AppsettingsProtector;
 using AppsettingsProtector.Extensions;
+using Microsoft.AspNetCore.DataProtection;
 using ReferenceBlazorApp.Data;
 
 namespace ReferenceBlazorApp
@@ -9,12 +11,17 @@ namespace ReferenceBlazorApp
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            builder.Services.AddPersistentEncryptor(out var startupEncryptor);
+            builder.Services.AddPersistentEncryptor<IPersistentBase64Encryptor, PersistentBase64Encryptor>(out var startupEncryptor);
             builder.Configuration.AddEncryptedJsonFile(source => {
-                source.Path = Path.Combine(Environment.CurrentDirectory, "protectedSettings.json");
+                source.Path = "protectedSettings.json";
                 source.Encryptor = startupEncryptor;
                 source.TryEncryptOnDecryptFailure = true; // this is true anyway, but code is here to demonstrate the api exists
             });
+
+            var secret = builder.Configuration["secret"];
+            if (secret == null) {
+                throw new ArgumentNullException(nameof(secret));
+            }
 
             // Add services to the container.
             builder.Services.AddRazorPages();
