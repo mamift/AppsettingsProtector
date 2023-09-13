@@ -20,7 +20,7 @@ public record UnprotectResult(
             UnprotectedData = Array.Empty<byte>()
         };
 
-    public static UnprotectResult WithError(Exception error)
+    public static UnprotectResult WithError(Exception? error)
     {
         return new(false, false, false, false, error) {
             UnprotectedData = Array.Empty<byte>()
@@ -38,7 +38,7 @@ public record UnprotectResult<TData>(
             UnprotectedData = default(TData)
         };
 
-    public static UnprotectResult<TData?> WithError(Exception error)
+    public static UnprotectResult<TData?> WithError(Exception? error)
     {
         return new(false, false, false, false, error) {
             UnprotectedData = default(TData)

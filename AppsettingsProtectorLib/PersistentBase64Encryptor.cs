@@ -21,7 +21,7 @@ public interface IPersistentBase64Encryptor : IPersistentEncryptor
     /// <param name="base64Text"></param>
     /// <returns></returns>
     UnprotectResult<string> UnprotectBase64String(string base64Text);
-    UnprotectResult<string> UnprotectBytesAsBase64String(byte[] bytes);
+    UnprotectResult<string?> UnprotectBytesAsBase64String(byte[] bytes);
 }
 
 public class PersistentBase64Encryptor: PersistentEncryptor, IPersistentBase64Encryptor
@@ -52,11 +52,18 @@ public class PersistentBase64Encryptor: PersistentEncryptor, IPersistentBase64En
         return UnprotectResult<string>.WithSuccessData(unprotectResult.UnprotectedData.ToDefaultEncodingString());
     }
 
-    public UnprotectResult<string> UnprotectBytesAsBase64String(byte[] bytes)
+    public UnprotectResult<string?> UnprotectBytesAsBase64String(byte[] bytes)
     {
         var unprotectResult = base.UnprotectBytes(bytes);
+        if (!unprotectResult.Success) {
+            return UnprotectResult<string?>.WithError(unprotectResult.Exception);
+        }
         var base64String = Convert.ToBase64String(unprotectResult.UnprotectedData);
-        return UnprotectResult<string>.WithSuccessData(base64String);
+
+        if (base64String.Length <= 0)
+            return UnprotectResult<string?>.WithError(new Exception("Unspecified error - decoded base64 string was empty"));
+
+        return UnprotectResult<string?>.WithSuccessData(base64String);
     }
 
     public override void ProtectFileAndSave(string srcFilePath, string? destinationFilePath = null)
