@@ -1,4 +1,6 @@
-﻿namespace ReferenceBlazorApp;
+﻿using System.Text.Json.Serialization;
+
+namespace ReferenceBlazorApp;
 
 public class AppSettings
 {
@@ -24,5 +26,7 @@ public class Logging
 public class Loglevel
 {
     public string? Default { get; set; }
+
+    [JsonPropertyName("Microsoft.AspNetCore")]
     public string? MicrosoftAspNetCore { get; set; }
 }

@@ -27,6 +27,9 @@ namespace ReferenceBlazorApp
             var microsoftConnectionString = builder.Configuration.GetConnectionString("Microsoft");
             ArgumentNullException.ThrowIfNull(microsoftConnectionString);
 
+            var appSettings = builder.Configuration.Get<AppSettings>();
+            ArgumentNullException.ThrowIfNull(appSettings);
+
             // Add services to the container.
             builder.Services.AddRazorPages();
             builder.Services.AddServerSideBlazor();
