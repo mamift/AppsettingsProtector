@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.AspNetCore.DataProtection;
 
@@ -32,6 +33,18 @@ public static class ProtectExtensions
     public static byte[] ToDefaultEncodingBytes(this string theString)
     {
         return Encoding.Default.GetBytes(theString);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static byte[] FromBase64String(this string theString)
+    {
+        return Convert.FromBase64String(theString);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string ToBase64String(this byte[] bytes)
+    {
+        return Convert.ToBase64String(bytes);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

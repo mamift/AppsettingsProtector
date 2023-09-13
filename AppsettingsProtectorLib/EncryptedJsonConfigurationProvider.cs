@@ -28,10 +28,10 @@ namespace AppsettingsProtector
                 : throw new InvalidOperationException("Unable to load protected JSON file - Path was not set in source file configuration provider."))!;
 
             var bytes = stream.ReadAsBytesToEnd();
-            OneOf<UnprotectResult, UnprotectResult<string>> unprotectResult;
+            OneOf<UnprotectResult, UnprotectResult<string?>> unprotectResult;
 
             if (_encryptor is IPersistentBase64Encryptor base64Encryptor) {
-                unprotectResult = base64Encryptor.UnprotectBytesAsBase64String(bytes);
+                unprotectResult = base64Encryptor.UnprotectBase64String(bytes.ToBase64String());
             }
             else {
                 unprotectResult = _encryptor.UnprotectBytes(bytes);
@@ -45,7 +45,12 @@ namespace AppsettingsProtector
                 var _ = JsonNode.Parse(asString);
 
                 if (_encryptIfDecryptFails) {
-                    _encryptor.ProtectFileAndSave(srcFilePath);
+                    if (_encryptor is IPersistentBase64Encryptor base64Encryptor2) {
+                        base64Encryptor2.ProtectFileAndSave(srcFilePath);
+                    }
+                    else {
+                        _encryptor.ProtectFileAndSave(srcFilePath);
+                    }
                 }
             }
             else {
