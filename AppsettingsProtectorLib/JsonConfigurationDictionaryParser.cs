@@ -98,8 +98,7 @@ public class JsonConfigurationDictionaryParser
                     _data[key] = value.ToString();
                 }
 
-                throw new InvalidOperationException("Null key for JsonElement: " + value);
-                break;
+                throw new InvalidOperationException($"Null key for JsonElement of kind '{value.ValueKind}', value '{value}'");
 
             default:
                 throw new FormatException($"Unsupported JSON token '{value.ValueKind}' was found");
