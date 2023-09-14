@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,6 +53,17 @@ public static class ServiceExtensions
         if (withDpApi) {
             collection.AddDataProtection()
                 .DisableAutomaticKeyGeneration();
+        }
+        else {
+            var svcDesc = collection.FirstOrDefault(sd => sd.ServiceType == typeof(IDataProtectionBuilder));
+            if (svcDesc == default || (svcDesc.ImplementationFactory == null && svcDesc.ImplementationInstance == null)) {
+                throw new InvalidOperationException("Data protection has not been added to the service collection");
+            }
+            
+            var idpb = (svcDesc.ImplementationInstance as IDataProtectionBuilder) ?? 
+                       (svcDesc.ImplementationFactory?.Invoke(collection.BuildServiceProvider()) as IDataProtectionBuilder);
+
+            idpb?.DisableAutomaticKeyGeneration();
         }
         
         switch (lifetime) {
