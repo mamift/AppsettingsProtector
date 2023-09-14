@@ -13,23 +13,23 @@ public class JsonConfigurationDictionaryParser
 
     protected JsonConfigurationDictionaryParser() { }
 
-    private readonly IDictionary<string?, string> _data =
-        new SortedDictionary<string?, string>(StringComparer.OrdinalIgnoreCase);
+    private readonly IDictionary<string, string?> _data =
+        new SortedDictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
 
     private readonly Stack<string> _context = new();
     private string? _currentPath;
 
-    public static IDictionary<string?, string> Parse(string input)
+    public static IDictionary<string, string?> Parse(string input)
     {
         return GetNewInstance().ParseString(input);
     }
 
-    public static IDictionary<string?, string> Parse(Stream input)
+    public static IDictionary<string, string?> Parse(Stream input)
     {
         return GetNewInstance().ParseStream(input);
     }
 
-    private IDictionary<string?, string> ParseString(string jsonString)
+    private IDictionary<string, string?> ParseString(string jsonString)
     {
         _data.Clear();
 
@@ -49,7 +49,7 @@ public class JsonConfigurationDictionaryParser
         return _data;
     }
 
-    private IDictionary<string?, string> ParseStream(Stream input)
+    private IDictionary<string, string?> ParseStream(Stream input)
     {
         using var reader = new StreamReader(input);
         var jsonString = reader.ReadToEnd();
@@ -90,12 +90,16 @@ public class JsonConfigurationDictionaryParser
             case JsonValueKind.False:
             case JsonValueKind.Null:
                 string? key = _currentPath;
-                if (_data.ContainsKey(key)) {
-                    throw new FormatException($"A duplicate key '{key}' was found.");
+                if (key != null) {
+                    if (_data.ContainsKey(key)) {
+                        throw new FormatException($"A duplicate key '{key}' was found.");
+                    }
+
+                    _data[key] = value.ToString();
+                    break;
                 }
 
-                _data[key] = value.ToString();
-                break;
+                throw new InvalidOperationException($"Null key for JsonElement of kind '{value.ValueKind}', value '{value}'");
 
             default:
                 throw new FormatException($"Unsupported JSON token '{value.ValueKind}' was found");

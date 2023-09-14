@@ -25,12 +25,12 @@ namespace AppsettingsProtector
             if (_encryptor == null) throw new ArgumentNullException(nameof(_encryptor), "Encryptor was never initialised!");
             string srcFilePath = (!string.IsNullOrWhiteSpace(Source.Path)
                 ? Source.Path
-                : throw new InvalidOperationException("Unable to load protected JSON file - Path was not set in source file configuration provider."))!;
+                : throw new AppsettingsProtectorException("Unable to load protected JSON file - Path was not set in source file configuration provider."))!;
 
             var bytes = stream.ReadAsBytesToEnd();
             OneOf<UnprotectResult, UnprotectResult<string?>> unprotectResult;
 
-            if (_encryptor is IPersistentBase64Encryptor base64Encryptor) {
+            if (_encryptor is IPersistedBase64Encryptor base64Encryptor) {
                 var base64Str = bytes.ToDefaultEncodingString();
                 unprotectResult = base64Encryptor.UnprotectBase64String(base64Str);
             }
@@ -46,7 +46,7 @@ namespace AppsettingsProtector
                 var _ = JsonNode.Parse(asString);
 
                 if (_encryptIfDecryptFails) {
-                    if (_encryptor is IPersistentBase64Encryptor base64Encryptor2) {
+                    if (_encryptor is IPersistedBase64Encryptor base64Encryptor2) {
                         base64Encryptor2.ProtectFileAndSave(srcFilePath);
                     }
                     else {
@@ -56,6 +56,10 @@ namespace AppsettingsProtector
             }
             else {
                 string? matchedString = unprotectResult.Match(b => b.UnprotectedData.ToDefaultEncodingString(), s => s.UnprotectedData);
+                if (matchedString == null) {
+                    throw new AppsettingsProtectorException("Unable to decode string");
+                }
+                var _ = JsonNode.Parse(matchedString!);
                 asString = matchedString;
             }
 
@@ -87,7 +91,10 @@ namespace AppsettingsProtector
 
         public override IConfigurationProvider Build(IConfigurationBuilder builder)
         {
-            EnsureDefaults(builder);
+            base.EnsureDefaults(builder);
+            if (string.IsNullOrWhiteSpace(Path)) {
+                throw new ArgumentNullException(nameof(Path), "No path was provided! Please explicitly provide a path to the JSON file to protect.");
+            }
             var theEncryptor = Encryptor ?? throw new InvalidOperationException("Encryptor was never initialised!");
             return new EncryptedJsonConfigurationProvider(this, theEncryptor, TryEncryptOnDecryptFailure);
         }

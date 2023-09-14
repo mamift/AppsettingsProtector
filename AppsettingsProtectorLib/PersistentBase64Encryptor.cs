@@ -1,16 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.CompilerServices;
-using System.Text;
 using AppsettingsProtector.Extensions;
 using Microsoft.AspNetCore.DataProtection;
 
 namespace AppsettingsProtector;
 
-public interface IPersistentBase64Encryptor : IPersistentEncryptor
+public interface IPersistedBase64Encryptor : IPersistedEncryptor
 {
     /// <summary>
-    /// Protects plain text and converts the encrypted bytes as a base64 string.
+    /// Encrypts the given <paramref name="plainText"/> and converts the encrypted bytes as a base64 string.
     /// </summary>
     /// <param name="plainText"></param>
     /// <returns></returns>
@@ -22,14 +21,13 @@ public interface IPersistentBase64Encryptor : IPersistentEncryptor
     /// <param name="base64Text"></param>
     /// <returns></returns>
     UnprotectResult<string?> UnprotectBase64String(string base64Text);
-    UnprotectResult<string?> UnprotectBytesFromBase64String(byte[] bytes);
 }
 
-public class PersistentBase64Encryptor: PersistentEncryptor, IPersistentBase64Encryptor
+public class PersistedBase64Encryptor: PersistedEncryptor, IPersistedBase64Encryptor
 {
     private Base64FormattingOptions _base64FormattingOptions;
 
-    public PersistentBase64Encryptor(IPersistedDataProtector provider) : base(provider)
+    public PersistedBase64Encryptor(IPersistedDataProtector provider) : base(provider)
     {
         _base64FormattingOptions = Base64FormattingOptions.InsertLineBreaks;
     }
@@ -48,13 +46,19 @@ public class PersistentBase64Encryptor: PersistentEncryptor, IPersistentBase64En
 
     public UnprotectResult<string?> UnprotectBase64String(string base64Text)
     {
-        var bytesFromBase64String = Convert.FromBase64String(base64Text);
+        byte[] bytesFromBase64String;
+        try {
+            bytesFromBase64String = Convert.FromBase64String(base64Text);
+        }
+        catch {
+            bytesFromBase64String = Array.Empty<byte>();
+        }
         var unprotectResult = base.UnprotectBytes(bytesFromBase64String);
-        return Resolve(unprotectResult);
+        return ResolveDecodedString(unprotectResult);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private UnprotectResult<string?> Resolve(UnprotectResult ur)
+    private UnprotectResult<string?> ResolveDecodedString(UnprotectResult ur)
     {
         if (!ur.Success) {
             return UnprotectResult<string?>.WithError(ur.Exception);
@@ -65,12 +69,6 @@ public class PersistentBase64Encryptor: PersistentEncryptor, IPersistentBase64En
             return UnprotectResult<string?>.WithError(new Exception("Unspecified error - decoded string was empty"));
 
         return UnprotectResult<string?>.WithSuccessData(decodedString);
-    }
-
-    public UnprotectResult<string?> UnprotectBytesFromBase64String(byte[] bytes)
-    {
-        var unprotectResult = base.UnprotectBytes(bytes);
-        return Resolve(unprotectResult);
     }
 
     public override void ProtectFileAndSave(string srcFilePath, string? destinationFilePath = null)

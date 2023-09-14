@@ -12,7 +12,7 @@ public class EncryptorTests
     {
         var provider = DataProtectionProvider.Create(BaseTester.AppName);
         var protector = provider.CreatePersistedDataProtector("AppSettingsEncryption");
-        var e = new PersistentEncryptor(protector);
+        var e = new PersistedEncryptor(protector);
 
         var appSettingsFile = new FileInfo("appsettings.json");
         
@@ -24,7 +24,7 @@ public class EncryptorTests
     {
         var provider = DataProtectionProvider.Create(BaseTester.AppName);
         var protector = provider.CreatePersistedDataProtector("AppSettingsEncryption");
-        var e = new PersistentEncryptor(protector);
+        var e = new PersistedEncryptor(protector);
 
         var appSettingsFile = new FileInfo("appsettings.json");
         
