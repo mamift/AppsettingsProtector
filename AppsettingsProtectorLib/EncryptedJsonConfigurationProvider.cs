@@ -30,7 +30,7 @@ namespace AppsettingsProtector
             var bytes = stream.ReadAsBytesToEnd();
             OneOf<UnprotectResult, UnprotectResult<string?>> unprotectResult;
 
-            if (_encryptor is IPersistentBase64Encryptor base64Encryptor) {
+            if (_encryptor is IPersistedBase64Encryptor base64Encryptor) {
                 var base64Str = bytes.ToDefaultEncodingString();
                 unprotectResult = base64Encryptor.UnprotectBase64String(base64Str);
             }
@@ -46,7 +46,7 @@ namespace AppsettingsProtector
                 var _ = JsonNode.Parse(asString);
 
                 if (_encryptIfDecryptFails) {
-                    if (_encryptor is IPersistentBase64Encryptor base64Encryptor2) {
+                    if (_encryptor is IPersistedBase64Encryptor base64Encryptor2) {
                         base64Encryptor2.ProtectFileAndSave(srcFilePath);
                     }
                     else {

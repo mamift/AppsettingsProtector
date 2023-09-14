@@ -2,6 +2,11 @@
 
 namespace AppsettingsProtector;
 
+/// <summary>
+/// This interface is best used when creating an implementation of the <see cref="IEncryptor"/>, interface or any of its child interfaces:
+/// <see cref="IPersistedEncryptor"/> or <see cref="IPersistedBase64Encryptor"/>.
+/// </summary>
+/// <typeparam name="TData"></typeparam>
 public interface IUnprotectResult<TData>
 {
     TData UnprotectedData { get; init; }
@@ -12,6 +17,14 @@ public interface IUnprotectResult<TData>
     Exception? Exception { get; init; }
 }
 
+/// <summary>
+/// Default implementation of the <see cref="IUnprotectResult{TData}"/> interface; defaults to <see cref="byte"/> array.
+/// </summary>
+/// <param name="WasDangerous"></param>
+/// <param name="RequiresMigration"></param>
+/// <param name="WasRevoked"></param>
+/// <param name="Success"></param>
+/// <param name="Exception"></param>
 public record UnprotectResult(
     bool WasDangerous, bool RequiresMigration, bool WasRevoked, bool Success, Exception? Exception) : IUnprotectResult<byte[]>
 {
@@ -30,6 +43,15 @@ public record UnprotectResult(
     public byte[] UnprotectedData { get; init; } = null!;
 }
 
+/// <summary>
+/// Generic implementation of the <see cref="IUnprotectResult{TData}"/> interface; use whatever type best fits.
+/// </summary>
+/// <typeparam name="TData"></typeparam>
+/// <param name="WasDangerous"></param>
+/// <param name="RequiresMigration"></param>
+/// <param name="WasRevoked"></param>
+/// <param name="Success"></param>
+/// <param name="Exception"></param>
 public record UnprotectResult<TData>(
     bool WasDangerous, bool RequiresMigration, bool WasRevoked, bool Success, Exception? Exception) : IUnprotectResult<TData>
 {
