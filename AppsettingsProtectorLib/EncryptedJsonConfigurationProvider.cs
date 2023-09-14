@@ -25,7 +25,7 @@ namespace AppsettingsProtector
             if (_encryptor == null) throw new ArgumentNullException(nameof(_encryptor), "Encryptor was never initialised!");
             string srcFilePath = (!string.IsNullOrWhiteSpace(Source.Path)
                 ? Source.Path
-                : throw new InvalidOperationException("Unable to load protected JSON file - Path was not set in source file configuration provider."))!;
+                : throw new AppsettingsProtectorException("Unable to load protected JSON file - Path was not set in source file configuration provider."))!;
 
             var bytes = stream.ReadAsBytesToEnd();
             OneOf<UnprotectResult, UnprotectResult<string?>> unprotectResult;
@@ -56,6 +56,10 @@ namespace AppsettingsProtector
             }
             else {
                 string? matchedString = unprotectResult.Match(b => b.UnprotectedData.ToDefaultEncodingString(), s => s.UnprotectedData);
+                if (matchedString == null) {
+                    throw new AppsettingsProtectorException("Unable to decode string");
+                }
+                var _ = JsonNode.Parse(matchedString!);
                 asString = matchedString;
             }
 
