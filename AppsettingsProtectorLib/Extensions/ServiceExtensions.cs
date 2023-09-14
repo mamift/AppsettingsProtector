@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,6 +8,25 @@ namespace AppsettingsProtector.Extensions;
 
 public static class ServiceExtensions
 {
+    /// <summary>
+    /// Adds the default <see cref="IPersistedBase64Encryptor"/> encryptor to the service collection and returns an instance that can be used in startup logic.
+    /// <para>Use the overload <see cref="AddPersistedEncryptor{TEncryptorInterfaceType,TEncryptorImplType}"/> to add your own implementation.</para>
+    /// </summary>
+    /// <param name="collection"></param>
+    /// <param name="startupEncryptor"></param>
+    /// <returns></returns>
+    public static IServiceCollection AddPersistedEncryptorWithDefaults(this IServiceCollection collection, out IPersistedBase64Encryptor startupEncryptor)
+    {
+        if (collection.Any(s => s.ImplementationType == typeof(PersistedBase64Encryptor))) {
+            throw new AppsettingsProtectorException("Does not support being called twice");
+        }
+
+        var innerInvocation = collection.AddPersistedEncryptor<IPersistedBase64Encryptor, PersistedBase64Encryptor>(out var theStartupEncryptor,
+            withDpApi: true, lifetime: ServiceLifetime.Scoped);
+        startupEncryptor = theStartupEncryptor;
+        return innerInvocation;
+    }
+
     /// <summary>
     /// Registers an <see cref="IPersistedEncryptor"/> to the service collection, with given type params.
     /// </summary>
@@ -22,7 +42,7 @@ public static class ServiceExtensions
     /// <typeparam name="TEncryptorImplType"></typeparam>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public static IServiceCollection AddPersistedEncryptor<TEncryptorInterfaceType, TEncryptorImplType>(this IServiceCollection collection, out IPersistedEncryptor startupEncryptor, 
+    public static IServiceCollection AddPersistedEncryptor<TEncryptorInterfaceType, TEncryptorImplType>(this IServiceCollection collection, out TEncryptorImplType startupEncryptor, 
         string purpose = "ProtectedAppSettings", bool withDpApi = true, ServiceLifetime lifetime = ServiceLifetime.Scoped)
         where TEncryptorInterfaceType : class, IPersistedEncryptor
         where TEncryptorImplType: class, TEncryptorInterfaceType
