@@ -1,6 +1,5 @@
 using AppsettingsProtector;
 using AppsettingsProtector.Extensions;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using ReferenceBlazorApp.Data;
 
 namespace ReferenceBlazorApp
