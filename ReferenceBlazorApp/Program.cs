@@ -1,5 +1,6 @@
 using AppsettingsProtector;
 using AppsettingsProtector.Extensions;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using ReferenceBlazorApp.Data;
 
 namespace ReferenceBlazorApp
@@ -9,8 +10,8 @@ namespace ReferenceBlazorApp
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
-            builder.Services.AddPersistentEncryptor<IPersistentBase64Encryptor, PersistentBase64Encryptor>(out var startupEncryptor);
+            
+            builder.Services.AddPersistedEncryptor<IPersistentBase64Encryptor, PersistentBase64Encryptor>(out var startupEncryptor);
             builder.Configuration.AddEncryptedJsonFile(source => {
                 source.Path = "protectedSettings.json";
                 source.Encryptor = startupEncryptor;

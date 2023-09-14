@@ -13,18 +13,24 @@ public static class ServiceExtensions
     /// <param name="collection"></param>
     /// <param name="startupEncryptor">Will return an initial <see cref="IPersistentEncryptor"/> that can be used inside startup methods.</param>
     /// <param name="purpose">The DPAPI provides a separate purpose as a string; which allows creating multiple providers that can separately encrypt/decrypt their own categories of files.</param>
-    /// <param name="withDpApi">Also invoke the <see cref="DataProtectionServiceCollectionExtensions.AddDataProtectionServices"/> extension method. Set this to false if you need to invoke it earlier than there.</param>
+    /// <param name="withDpApi">Also invoke the <see cref="DataProtectionServiceCollectionExtensions.AddDataProtectionServices"/> extension method. Set this to false if you need to invoke it earlier than here. When this true, this will also disable automatic key generation (invokes <see cref="DataProtectionBuilderExtensions.DisableAutomaticKeyGeneration"/>)
+    /// <para>If this is set to false, and you do not invoke <see cref="DataProtectionBuilderExtensions.DisableAutomaticKeyGeneration"/> yourself, automatic key generation will still occur
+    /// but errors may be logged when the key expires and data is unprotected past the expiration date. Data should still be successfully decrypted though and no unhandled exceptions thrown.</para>
+    /// </param>
     /// <param name="lifetime"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentNullException"></exception>
-    public static IServiceCollection AddPersistentEncryptor<TEncryptorInterfaceType, TEncryptorImplType>(this IServiceCollection collection, out IPersistentEncryptor startupEncryptor, 
+    public static IServiceCollection AddPersistedEncryptor<TEncryptorInterfaceType, TEncryptorImplType>(this IServiceCollection collection, out IPersistentEncryptor startupEncryptor, 
         string purpose = "ProtectedAppSettings", bool withDpApi = true, ServiceLifetime lifetime = ServiceLifetime.Scoped)
         where TEncryptorInterfaceType : class, IPersistentEncryptor
         where TEncryptorImplType: class, TEncryptorInterfaceType
     {
         if (purpose == null) throw new ArgumentNullException(nameof(purpose));
-        if (withDpApi) collection.AddDataProtection();
-
+        if (withDpApi) {
+            collection.AddDataProtection()
+                .DisableAutomaticKeyGeneration();
+        }
+        
         switch (lifetime) {
             case ServiceLifetime.Scoped:
                 collection.AddScoped<TEncryptorInterfaceType, TEncryptorImplType>(PersistentEncryptorFactory<TEncryptorImplType>);
@@ -45,7 +51,7 @@ public static class ServiceExtensions
         return collection;
 
         TEncryptorImplType PersistentEncryptorFactory<TEncryptorImplTypeInner>(IServiceProvider provider)
-        where TEncryptorImplTypeInner: class, TEncryptorInterfaceType
+            where TEncryptorImplTypeInner: class, TEncryptorInterfaceType
         {
             var dataProvider = provider.GetRequiredService<IDataProtectionProvider>();
             var protector = dataProvider.CreatePersistedDataProtector(purpose);

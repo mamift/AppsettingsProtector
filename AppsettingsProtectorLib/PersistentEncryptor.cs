@@ -9,20 +9,30 @@ namespace AppsettingsProtector;
 public interface IEncryptor
 {
     /// <summary>
-    /// Protects the contents of the given <paramref name="srcFilePath"/> and saves it back to either the original file path or an optional
+    /// Protects the contents of the given <paramref name="srcFilePath"/> and saves it back to either the original file path (overwriting it) or an optional
     /// <paramref name="destinationFilePath"/>.
     /// </summary>
-    /// <param name="srcFilePath"></param>
+    /// <param name="srcFilePath">The file whose contents are to be protected.</param>
     /// <param name="destinationFilePath">Optional; set this to a value to create an encrypted copy of the original.</param>
     void ProtectFileAndSave(string srcFilePath, string? destinationFilePath = null);
     /// <summary>
     /// Loads the contents of the given <paramref name="filePath"/> and returns an encrypted version of it.
-    /// <para>DOES NOT SAVE IT BACK TO THE FILE PATH.</para>
+    /// <para>THIS DOES NOT SAVE IT BACK TO THE FILE PATH.</para>
     /// </summary>
     /// <param name="filePath"></param>
     /// <returns></returns>
     byte[] ProtectFileContents(string filePath);
+    /// <summary>
+    /// Protect the given <paramref name="plainText"/> as an encrypted <see cref="byte"/> array.
+    /// </summary>
+    /// <param name="plainText"></param>
+    /// <returns></returns>
     byte[] ProtectString(string plainText);
+    /// <summary>
+    /// Unprotect the given <paramref name="bytes"/>, and returns an instance of an <see cref="UnprotectResult{TData}"/>
+    /// </summary>
+    /// <param name="bytes"></param>
+    /// <returns></returns>
     UnprotectResult UnprotectBytes(byte[] bytes);
     void UnprotectFileAndSave(string srcFilePath, string? destinationFilePath = null);
     UnprotectResult UnprotectFileContents(string filePath);
