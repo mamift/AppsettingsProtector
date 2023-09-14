@@ -96,6 +96,7 @@ public class JsonConfigurationDictionaryParser
                     }
 
                     _data[key] = value.ToString();
+                    break;
                 }
 
                 throw new InvalidOperationException($"Null key for JsonElement of kind '{value.ValueKind}', value '{value}'");
