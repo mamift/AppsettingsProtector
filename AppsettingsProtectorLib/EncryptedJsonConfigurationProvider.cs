@@ -91,7 +91,10 @@ namespace AppsettingsProtector
 
         public override IConfigurationProvider Build(IConfigurationBuilder builder)
         {
-            EnsureDefaults(builder);
+            base.EnsureDefaults(builder);
+            if (string.IsNullOrWhiteSpace(Path)) {
+                throw new ArgumentNullException(nameof(Path), "No path was provided! Please explicitly provide a path to the JSON file to protect.");
+            }
             var theEncryptor = Encryptor ?? throw new InvalidOperationException("Encryptor was never initialised!");
             return new EncryptedJsonConfigurationProvider(this, theEncryptor, TryEncryptOnDecryptFailure);
         }
