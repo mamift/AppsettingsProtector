@@ -10,7 +10,7 @@ namespace ReferenceBlazorApp
         {
             var builder = WebApplication.CreateBuilder(args);
             
-            builder.Services.AddPersistedEncryptor<IPersistedBase64Encryptor, PersistedBase64Encryptor>(out var startupEncryptor);
+            builder.Services.AddPersistedEncryptorWithDefaults(out var startupEncryptor);
             builder.Configuration.AddEncryptedJsonFile(source => {
                 source.Path = "protectedSettings.json";
                 source.Encryptor = startupEncryptor;
