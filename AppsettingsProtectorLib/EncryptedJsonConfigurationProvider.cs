@@ -7,11 +7,21 @@ using OneOf;
 
 namespace AppsettingsProtector;
 
+/// <summary>
+/// A configuration provider that can encrypt/decrypt JSON files.
+/// </summary>
 public class EncryptedJsonConfigurationProvider : FileConfigurationProvider
 {
     private readonly IEncryptor? _encryptor;
     private readonly bool _encryptIfDecryptFails;
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="source"></param>
+    /// <param name="encryptor"></param>
+    /// <param name="encryptIfDecryptFails"></param>
+    /// <exception cref="ArgumentNullException"></exception>
     public EncryptedJsonConfigurationProvider(EncryptedJsonConfigurationSource source, IEncryptor encryptor,
         bool encryptIfDecryptFails) : base(source)
     {
@@ -62,11 +72,11 @@ public class EncryptedJsonConfigurationProvider : FileConfigurationProvider
             if (matchedString == null) {
                 throw new AppsettingsProtectorException("Unable to decode string");
             }
-            var _ = JsonNode.Parse(matchedString!);
+            var _ = JsonNode.Parse(matchedString);
             asString = matchedString;
         }
 
-        Data = JsonConfigurationDictionaryParser.Parse(asString)!;
+        Data = JsonConfigurationDictionaryParser.Parse(asString);
     }
 }
 
@@ -75,12 +85,12 @@ public class EncryptedJsonConfigurationProvider : FileConfigurationProvider
 /// </summary>
 public class EncryptedJsonConfigurationSource : FileConfigurationSource
 {
-    private IPersistedEncryptor? _encryptor;
+    private IEncryptor? _encryptor;
 
     /// <summary>
     /// The encryptor used to encrypt/decrypt the configuration file.
     /// </summary>
-    public IPersistedEncryptor? Encryptor
+    public IEncryptor? Encryptor
     {
         get => _encryptor;
         set => SetEncryptor(value);
@@ -96,7 +106,7 @@ public class EncryptedJsonConfigurationSource : FileConfigurationSource
     /// </summary>
     public bool TryEncryptOnDecryptFailure { get; set; } = true;
 
-    private void SetEncryptor(IPersistedEncryptor? value)
+    private void SetEncryptor(IEncryptor? value)
     {
         _encryptor = value;
     }
