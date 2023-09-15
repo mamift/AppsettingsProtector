@@ -53,6 +53,10 @@ namespace AppsettingsProtector
                         _encryptor.ProtectFileAndSave(srcFilePath);
                     }
                 }
+                else {
+                    var possibleException = unprotectResult.Match(b => b.Exception, s => s.Exception);
+                    throw new AppsettingsProtectorException("Decryption failed!", possibleException);
+                }
             }
             else {
                 string? matchedString = unprotectResult.Match(b => b.UnprotectedData.ToDefaultEncodingString(), s => s.UnprotectedData);
