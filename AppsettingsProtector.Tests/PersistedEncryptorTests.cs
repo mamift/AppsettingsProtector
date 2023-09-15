@@ -5,7 +5,7 @@ using Xunit;
 
 namespace AppsettingsProtector.Tests;
 
-public class EncryptorTests
+public class PersistedEncryptorTests
 {
     [Fact]
     public void TestEncryptorUnprotectFile()
