@@ -10,8 +10,9 @@ The library itself targets .NET Standard 2, and has been tested on .NET 5, .NET 
 
 1. Install the nuget package (link to-be-published).
 1. Add a separate JSON file (e.g. `protected.json`) to store your secrets or confidential information (you can name the file anything really, you don't have to even use the .json extension) - but make sure to reference this file name in your startup code.
-    - You *can* just use a single `appsettings.json` but some application settings do not need to be encrypted, like logging settings, as it complicates startup logic. For most apps I've found it easier to have a separate `project.json` file to store your secrets. Multiple files can contribute setting values to the same configuration dictionary, so there shouldn't be an issue.
+    - You *can* just use a single `appsettings.json` but some application settings do not need to be encrypted, like logging settings, as it complicates startup logic. For most apps I've found it easier to have a separate `project.json` file to store your secrets. Multiple files can contribute setting values to the same configuration dictionary, so long as the keys don't clash.
     - Make sure it's properly formed JSON, the library will use `System.Text.Json.JsonNode.Parse()` to do some basic validation.
+    - Your application's user account needs write access to the JSON that file will be protected. You may need to add additional file-system-level access control list settings for the protected file, especially in the case for IIS-hosted apps.
 1. Call **two** extension methods on your program's startup code in this order:
     - First on the host service collection: `AddPersistedEncryptor()`
         - This will register the encryptor used to encrypt the file the first time, which you will then pass to the next method.
@@ -46,12 +47,12 @@ public static void Main(string[] args)
 1. How does it handle first-time encryption?
     - This logic is: always attempt decryption of the specified JSON file every time on startup, but if it fails, try parsing it as plain text JSON, and if no errors occur during this JSON-parsing phase, assume it's un-encrypted and then encrypt it. 
     - This should properly handle first time encryption, and the same logic repeats every subsequent time startup occurs.
-    - The library will never write anything back to the file after the first time encryption; it only read from it.
+    - The library will never write anything back to the file after the first time encryption; it only read from it, but this first-time encryption process will require you app to have file-system-level write access to the file.
 2. What are the defaults?
-    - Uses the [ASP.NET Core Data Protection library](https://www.nuget.org/packages/Microsoft.AspNetCore.DataProtection/), but:
+    - Uses the [ASP.NET Data Protection library](https://www.nuget.org/packages/Microsoft.AspNetCore.DataProtection/), but:
         - Disables automatic key generation, so the key is not rotated every 90 days, but this can be overriden by you, so the library will also...
         - ...default to using the [DangerousUnprotect()](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.dataprotection.ipersisteddataprotector.dangerousunprotect?view=aspnetcore-6.0) API.
-        - On Windows the key used by itself is protected using the Windows DPAPI (so the key is accessed via currently logged in user's SID).
+        - On Windows, the key is managed using the defaults set by the [ASP.NET Data Protection Library](https://learn.microsoft.com/en-us/aspnet/core/security/data-protection/configuration/default-settings?view=aspnetcore-6.0#key-management), which includes special accommodation for IIS-hosted apps.
 3. Can I encrypt the protected JSON file during or before deployment?
     - Currently, no: as it is, the library is designed to encrypt the file for you after deployment, when the app starts up. Then it will transparently decrypt the file each time the app restarts.
     - This means post deployment and before the app starts up (like responding to a first request), there is a small time window when the JSON file itself resides as plaintext on the file system.
