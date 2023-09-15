@@ -16,11 +16,12 @@ public class EncryptedJsonConfigurationProvider : FileConfigurationProvider
     private readonly bool _encryptIfDecryptFails;
 
     /// <summary>
-    /// 
+    /// Instantiates a new instance with a <paramref name="source"/> (<see cref="EncryptedJsonConfigurationSource"/>) and an <paramref name="encryptor"/>.
     /// </summary>
     /// <param name="source"></param>
     /// <param name="encryptor"></param>
-    /// <param name="encryptIfDecryptFails"></param>
+    /// <param name="encryptIfDecryptFails">Set to <c>true</c> to handle a failed decryption exception and just encrypt the file.
+    /// This is used to encrypt on the first run of an app after a fresh deployment.</param>
     /// <exception cref="ArgumentNullException"></exception>
     public EncryptedJsonConfigurationProvider(EncryptedJsonConfigurationSource source, IEncryptor encryptor,
         bool encryptIfDecryptFails) : base(source)
@@ -29,6 +30,12 @@ public class EncryptedJsonConfigurationProvider : FileConfigurationProvider
         _encryptIfDecryptFails = encryptIfDecryptFails;
     }
 
+    /// <summary>
+    /// Load config file from a <see cref="Stream"/> given by the config builder.
+    /// </summary>
+    /// <param name="stream"></param>
+    /// <exception cref="ArgumentNullException"></exception>
+    /// <exception cref="AppsettingsProtectorException"></exception>
     public override void Load(Stream stream)
     {
         if (_encryptor == null) throw new ArgumentNullException(nameof(_encryptor), "Encryptor was never initialised!");
@@ -39,6 +46,7 @@ public class EncryptedJsonConfigurationProvider : FileConfigurationProvider
         var bytes = stream.ReadAsBytesToEnd();
         OneOf<UnprotectResult, UnprotectResult<string?>> unprotectResult;
 
+        // if the encrypt is a base64 one, then the bytes are actually a base64 string.
         if (_encryptor is IPersistedBase64Encryptor base64Encryptor) {
             var base64Str = bytes.ToDefaultEncodingString();
             unprotectResult = base64Encryptor.UnprotectBase64String(base64Str);
