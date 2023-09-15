@@ -59,8 +59,28 @@ public static void Main(string[] args)
 4. What happens if the data in the protected JSON file changes?
     - Then you must deploy an updated, plain text version of the new JSON file, then deploy, then wait for startup logic to run to re-encrypt the file.
     - Again, the same (small) time window between post-deployment and app startup will remain whereby the JSON file resides as plain text on the deployed server file system.
+5. Is this a 100% secure solution?
+    - No. [See below.](#vulnerable-window)
+    
+## Advanced security considerations + existing vulnerabilities
 
-## Roadmap for new features
+### Vulnerable window
+
+There is a **vulnerable window** that exists: from post-deployment to app-startup whereby your secrets inside your JSON file are completely unencrypted. This can be between anywhere from milliseconds to minutes depending on how your app is configured.
+
+- Because the encryption runs inside your app's startup method (usually `Main()`) while the host is being initialised, how big the window lasts depends on how much code/logic precedes the encryption process. If encryption happens first up, the window is smaller, otherwise, if any logging setup or database migrations happen before this, obviously the window is larger.
+- To minimise this, include in your deployment process, a final step to kickstart the app, by sending it a throwaway HTTP request.
+- **However, this is still better than nothing!**, especially for apps that reside on standalone web servers (that aren't domain managed), and there is no existing solution for protecting secret information such as connection strings. Using this library library at least ensures that for the vast majority of the lifetime that your app is running, the contents of your JSON file are concealed even to elevated/admin users.
+    - And yes, technically a persistent hacker could eventually get a hold of the decryption keys, if they could exploit some 0-day or elevation vulnerability in the underlying OS, but they would need to specifically execute untrusted code on the same server (and impersonate the application's user account), and that point you've probably got bigger issues.
+
+### File system snapshotting
+
+Some deployment processes might take a snapshot of the file system for backup purposes, or as a precautionary measure for immediate rollback. On Windows, this is handled by the VSS (Volumn Shadow Copy) service, on Linux this is handled by the Logical Volume Manager and on MacOS systems (with HFS+ or APFS), this is handled by the local snapshot feature of Time Machine.
+
+To mimimise capturing unencrypted data, ensure that any snapshot is taken after encrpytion of the file occurs! Again, best to include a separate deployment step that warms up the app so the encryption process happens as soon as possible after deployment.
+
+## Desiderata (Latin for "things desired")
 
 * Enable logging for decrypt/encrypt events using generic `ILogger<T>` interface (requires a bootstrap logger)
 * Enable using your own key, via an environment variable or one of the facilities (file system, certificate or registry key [Windows only] provided by the DP API library).
+* Separate console app that can encrypt the protected JSON file as a separate step? Would have to accommodate different ways different OS's and container technologies execute code under different user accounts.
