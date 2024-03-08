@@ -15,8 +15,6 @@ public class EncryptedJsonConfigurationProvider : FileConfigurationProvider
     private readonly IEncryptor? _encryptor;
     private readonly bool _encryptIfDecryptFails;
 
-    public bool HasBeenEncryptedFromPlainText { get; set; }
-
     /// <summary>
     /// Instantiates a new instance with a <paramref name="source"/> (<see cref="EncryptedJsonConfigurationSource"/>) and an <paramref name="encryptor"/>.
     /// </summary>

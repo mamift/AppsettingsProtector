@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <Content Include="..\ReferenceBlazorApp\appsettings.json" Link="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 

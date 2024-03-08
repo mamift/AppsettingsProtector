@@ -91,7 +91,9 @@ public class PersistedEncryptor : IPersistedEncryptor
     {
         var fileBytes = File.ReadAllBytes(filePath);
         try {
-            return PersistedDataProtector.DangerousUnprotect(fileBytes);
+            var asString = fileBytes.ToDefaultEncodingString();
+            var fromBase64 = Convert.FromBase64String(asString);
+            return PersistedDataProtector.DangerousUnprotect(fromBase64);
         }
         catch (CryptographicException ce) {
             return UnprotectResult.WithError(ce);

@@ -18,6 +18,11 @@ public class PersistedEncryptorTests
         var appSettingsFile = new FileInfo("appsettings.json");
 
         e.UnprotectFileAndSave(appSettingsFile.FullName);
+
+        var text = File.ReadAllText(appSettingsFile.FullName);
+
+        Assert.NotNull(text);
+        Assert.NotEmpty(text);
     }
 
     [Fact]
@@ -30,6 +35,16 @@ public class PersistedEncryptorTests
         var appSettingsFile = new FileInfo("appsettings.json");
 
         await e.ProtectFileAndSaveAsync(appSettingsFile.FullName);
+
+        var unprotectFileContents = e.UnprotectFileContents(appSettingsFile.FullName);
+
+        Assert.NotNull(unprotectFileContents);
+        Assert.NotNull(unprotectFileContents.UnprotectedData);
+        Assert.NotEmpty(unprotectFileContents.UnprotectedData);
+
+        var unprotectedString = unprotectFileContents.UnprotectedData.ToDefaultEncodingString();
+        Assert.NotNull(unprotectedString);
+        Assert.NotEmpty(unprotectedString);
     }
 
     [Fact]
