@@ -91,9 +91,7 @@ public class PersistedEncryptor : IPersistedEncryptor
     {
         var fileBytes = File.ReadAllBytes(filePath);
         try {
-            var asString = fileBytes.ToDefaultEncodingString();
-            var fromBase64 = Convert.FromBase64String(asString);
-            return PersistedDataProtector.DangerousUnprotect(fromBase64);
+            return PersistedDataProtector.DangerousUnprotect(fileBytes);
         }
         catch (CryptographicException ce) {
             return UnprotectResult.WithError(ce);
@@ -158,12 +156,10 @@ public class PersistedEncryptor : IPersistedEncryptor
         using var fileStream = new FileStream(srcFilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
         var plainBytes = fileStream.ReadAsBytesToEnd();
         var protectedBytes = ProtectBytes(plainBytes);
-        var base64 = Convert.ToBase64String(protectedBytes);
-        var base64Bytes = base64.ToDefaultEncodingBytes();
         if (destinationFilePath == null) {
             fileStream.ResetPosition();
             fileStream.SetLength(0);
-            await fileStream.WriteAsync(base64Bytes, 0, base64Bytes.Length);
+            await fileStream.WriteAsync(protectedBytes, 0, protectedBytes.Length);
             return;
         }
 

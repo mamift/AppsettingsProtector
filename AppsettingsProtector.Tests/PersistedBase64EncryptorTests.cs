@@ -6,18 +6,16 @@ using Xunit;
 
 namespace AppsettingsProtector.Tests;
 
-public class PersistedEncryptorTests
+public class PersistedBase64EncryptorTests
 {
     [Fact]
     public void TestEncryptorUnprotectFile()
     {
-        var provider = DataProtectionProvider.Create(BaseTester.AppName);
-        var protector = provider.CreatePersistedDataProtector("ProtectedAppSettings");
-        var e = new PersistedEncryptor(protector);
+        var encryptor = GetPersistedBase64Encryptor();
 
         var appSettingsFile = new FileInfo("appsettings.json");
 
-        e.UnprotectFileAndSave(appSettingsFile.FullName);
+        encryptor.UnprotectFileAndSave(appSettingsFile.FullName);
 
         var text = File.ReadAllText(appSettingsFile.FullName);
 
@@ -25,18 +23,24 @@ public class PersistedEncryptorTests
         Assert.NotEmpty(text);
     }
 
-    [Fact]
-    public async Task TestEncryptorProtectFileAsync()
+    private static PersistedBase64Encryptor GetPersistedBase64Encryptor()
     {
         var provider = DataProtectionProvider.Create(BaseTester.AppName);
         var protector = provider.CreatePersistedDataProtector("ProtectedAppSettings");
-        var e = new PersistedEncryptor(protector);
+        var e = new PersistedBase64Encryptor(protector);
+        return e;
+    }
+
+    [Fact]
+    public async Task TestEncryptorProtectFileAsync()
+    {
+        var encryptor = GetPersistedBase64Encryptor();
 
         var appSettingsFile = new FileInfo("appsettings.json");
 
-        await e.ProtectFileAndSaveAsync(appSettingsFile.FullName);
+        await encryptor.ProtectFileAndSaveAsync(appSettingsFile.FullName);
 
-        var unprotectFileContents = e.UnprotectFileContents(appSettingsFile.FullName);
+        var unprotectFileContents = encryptor.UnprotectFileContents(appSettingsFile.FullName);
 
         Assert.NotNull(unprotectFileContents);
         Assert.NotNull(unprotectFileContents.UnprotectedData);
@@ -50,15 +54,13 @@ public class PersistedEncryptorTests
     [Fact]
     public void TestEncryptorProtectFile()
     {
-        var provider = DataProtectionProvider.Create(BaseTester.AppName);
-        var protector = provider.CreatePersistedDataProtector("ProtectedAppSettings");
-        var e = new PersistedEncryptor(protector);
+        var encryptor = GetPersistedBase64Encryptor();
 
         var appSettingsFile = new FileInfo("appsettings.json");
 
-        e.ProtectFileAndSave(appSettingsFile.FullName);
+        encryptor.ProtectFileAndSave(appSettingsFile.FullName);
 
-        var unprotectFileContents = e.UnprotectFileContents(appSettingsFile.FullName);
+        var unprotectFileContents = encryptor.UnprotectFileContents(appSettingsFile.FullName);
         Assert.NotNull(unprotectFileContents);
         Assert.NotNull(unprotectFileContents.UnprotectedData);
         Assert.NotEmpty(unprotectFileContents.UnprotectedData);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using AppsettingsProtector.Extensions;
 using Microsoft.AspNetCore.DataProtection;
@@ -31,6 +32,19 @@ public class PersistedBase64Encryptor: PersistedEncryptor, IPersistedBase64Encry
     public PersistedBase64Encryptor(IPersistedDataProtector provider) : base(provider)
     {
         _base64FormattingOptions = Base64FormattingOptions.InsertLineBreaks;
+    }
+
+    public override UnprotectResult UnprotectFileContents(string filePath)
+    {
+        var fileBytes = File.ReadAllBytes(filePath);
+        try {
+            var asBase64String = fileBytes.ToDefaultEncodingString();
+            var fromBase64 = Convert.FromBase64String(asBase64String);
+            return PersistedDataProtector.DangerousUnprotect(fromBase64);
+        }
+        catch (CryptographicException ce) {
+            return UnprotectResult.WithError(ce);
+        }
     }
 
     /// <summary>
@@ -76,6 +90,23 @@ public class PersistedBase64Encryptor: PersistedEncryptor, IPersistedBase64Encry
             return UnprotectResult<string?>.WithError(new Exception("Unspecified error - decoded string was empty"));
 
         return UnprotectResult<string?>.WithSuccessData(decodedString);
+    }
+
+    public override async Task ProtectFileAndSaveAsync(string srcFilePath, string? destinationFilePath = null)
+    {
+        using var fileStream = new FileStream(srcFilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        var plainBytes = fileStream.ReadAsBytesToEnd();
+        var protectedBytes = ProtectBytes(plainBytes);
+        var base64 = Convert.ToBase64String(protectedBytes);
+        var base64Bytes = base64.ToDefaultEncodingBytes();
+        if (destinationFilePath == null) {
+            fileStream.ResetPosition();
+            fileStream.SetLength(0);
+            await fileStream.WriteAsync(base64Bytes, 0, base64Bytes.Length);
+            return;
+        }
+
+        File.WriteAllBytes(destinationFilePath, protectedBytes);
     }
 
     public override void ProtectFileAndSave(string srcFilePath, string? destinationFilePath = null)
