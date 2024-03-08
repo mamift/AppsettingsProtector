@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using AppsettingsProtector.Extensions;
@@ -98,6 +99,10 @@ public class PersistedEncryptor : IPersistedEncryptor
 
     public virtual UnprotectResult UnprotectBytes(byte[] bytes)
     {
+        if (bytes.Equals(Array.Empty<byte>())) {
+            return UnprotectResult.WithError(new AppsettingsProtectorException("Not actually encrypted! (plaintext)"));
+        }
+
         try {
             return PersistedDataProtector.DangerousUnprotect(bytes);
         } 

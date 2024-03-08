@@ -57,7 +57,9 @@ public class EncryptedJsonConfigurationProvider : FileConfigurationProvider
 
         string asString;
         // failed might be because it's not encrypted
-        if (!unprotectResult.Match(b => b.Success, s => s.Success)) {
+        var successFlag = unprotectResult.Match(b => b.Success, s => s.Success);
+        Exception? possibleError = unprotectResult.Match(r => r.Exception, r => r.Exception);
+        if (!successFlag && possibleError is FormatException) {
             asString = stream.ReadAsStringToEnd();
             // check if the string is valid json
             var _ = JsonNode.Parse(asString);
