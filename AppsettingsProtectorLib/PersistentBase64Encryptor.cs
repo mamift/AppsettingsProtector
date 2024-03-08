@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using AppsettingsProtector.Extensions;
 using Microsoft.AspNetCore.DataProtection;
 
@@ -79,10 +80,21 @@ public class PersistedBase64Encryptor: PersistedEncryptor, IPersistedBase64Encry
 
     public override void ProtectFileAndSave(string srcFilePath, string? destinationFilePath = null)
     {
-        var protectedBytes = ProtectFileContents(srcFilePath);
+        using var fileStream = new FileStream(srcFilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        var plainBytes = fileStream.ReadAsBytesToEnd();
+        var protectedBytes = ProtectBytes(plainBytes);
         var base64 = Convert.ToBase64String(protectedBytes);
-        var filePath = destinationFilePath ?? srcFilePath;
-        File.WriteAllText(filePath, base64);
+        // File.WriteAllText(filePath, base64);
+        fileStream.ResetPosition();
+        fileStream.SetLength(0);
+        var base64Bytes = base64.ToDefaultEncodingBytes();
+
+        if (destinationFilePath == null) {
+            fileStream.Write(base64Bytes, 0, base64Bytes.Length);
+            return;
+        }
+
+        File.WriteAllBytes(destinationFilePath, base64Bytes);
     }
 
     public override void UnprotectFileAndSave(string srcFilePath, string? destinationFilePath = null)

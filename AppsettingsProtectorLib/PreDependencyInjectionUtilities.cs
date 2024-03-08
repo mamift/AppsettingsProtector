@@ -53,19 +53,20 @@ public static class PreDependencyInjectionUtilities
     public static IPersistedEncryptor? SharedPersistedEncryptor { get; private set; }
 
     /// <summary>
-    /// Sets up an encrypted JSON file for use as appSettings before configuring the DI container by statically creating the required object instances.
+    /// <para>Use this method inside of an with an <see cref="IConfigurationBuilder"/>, like inside <c>ConfigureAppConfiguration()</c> or similar.</para>
+    /// <para>Sets up an encrypted JSON file for use as appSettings before configuring the DI container by statically creating the required object instances.</para>
     /// <para>Still requires an <see cref="IConfigurationBuilder"/>.</para>
     /// </summary>
     /// <param name="configurationBuilder"></param>
-    /// <param name="protectorName"></param>
+    /// <param name="purpose"></param>
     /// <param name="protectedJsonFile"></param>
     /// <param name="skipCondition">Skip encryption entirely if this evaluates to true. If this is true, then the given <paramref name="protectedJsonFile"/> file will be treated as a plain text file.</param>
     /// <exception cref="InvalidOperationException"></exception>
-    public static void SetupEncryptedJsonFile(IConfigurationBuilder configurationBuilder, string protectorName, string protectedJsonFile,
+    public static void SetupEncryptedJsonFile(IConfigurationBuilder configurationBuilder, string purpose, string protectedJsonFile,
         Func<bool> skipCondition)
     {
         if (!File.Exists(protectedJsonFile)) throw new InvalidOperationException($"File: '{protectedJsonFile}' does not exist!");
-        SharedPersistedDataProtector ??= SharedDataProtectionProvider.CreatePersistedDataProtector(protectorName);
+        SharedPersistedDataProtector ??= SharedDataProtectionProvider.CreatePersistedDataProtector(purpose);
         SharedPersistedEncryptor ??= SharedPersistedDataProtector.CreatePersistedBase64Encryptor();
 
         if (skipCondition()) {

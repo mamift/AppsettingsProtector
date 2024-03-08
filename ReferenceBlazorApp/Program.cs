@@ -9,9 +9,15 @@ namespace ReferenceBlazorApp
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            
-            UseBasicDefaults(builder);
 
+            if (args.Contains("basic")) {
+                UseBasicDefaults(builder);
+            }
+            else {
+                PreDependencyInjectionUtilities.SetupSharedDataProtectionProvider(nameof(ReferenceBlazorApp));
+                PreDependencyInjectionUtilities.SetupEncryptedJsonFile(builder.Configuration, nameof(ReferenceBlazorApp), "protectedSettings.json",
+                    () => false);
+            }
 
             var secret = builder.Configuration["secret"];
             if (secret == null) {

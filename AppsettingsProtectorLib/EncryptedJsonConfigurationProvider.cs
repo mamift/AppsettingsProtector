@@ -15,6 +15,8 @@ public class EncryptedJsonConfigurationProvider : FileConfigurationProvider
     private readonly IEncryptor? _encryptor;
     private readonly bool _encryptIfDecryptFails;
 
+    public bool HasBeenEncryptedFromPlainText { get; set; }
+
     /// <summary>
     /// Instantiates a new instance with a <paramref name="source"/> (<see cref="EncryptedJsonConfigurationSource"/>) and an <paramref name="encryptor"/>.
     /// </summary>
@@ -59,7 +61,8 @@ public class EncryptedJsonConfigurationProvider : FileConfigurationProvider
         // failed might be because it's not encrypted
         var successFlag = unprotectResult.Match(b => b.Success, s => s.Success);
         Exception? possibleError = unprotectResult.Match(r => r.Exception, r => r.Exception);
-        if (!successFlag && possibleError is FormatException) {
+        if (!successFlag && (possibleError is FormatException || (possibleError is AppsettingsProtectorException &&
+                                                                  possibleError.Message.StartsWith("Not actually encrypted")))) {
             asString = stream.ReadAsStringToEnd();
             // check if the string is valid json
             var _ = JsonNode.Parse(asString);
