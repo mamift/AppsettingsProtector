@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.DataProtection;
 
 namespace AppsettingsProtector;
 
+/// <summary>
+/// A superset of the <see cref="IPersistedEncryptor"/> interface that handles base64 encoded strings (and also byte representations of those strings).
+/// </summary>
 public interface IPersistedBase64Encryptor : IPersistedEncryptor
 {
     /// <summary>
@@ -25,13 +28,67 @@ public interface IPersistedBase64Encryptor : IPersistedEncryptor
     UnprotectResult<string?> UnprotectBase64String(string base64Text);
 }
 
+/// <summary>
+/// Will do the same as the <see cref="PersistedEncryptor"/> but instead will read from encrypted files assuming they are base64 encoded, and also write to files as base64 encoded strings.
+/// </summary>
 public class PersistedBase64Encryptor: PersistedEncryptor, IPersistedBase64Encryptor
 {
     private Base64FormattingOptions _base64FormattingOptions;
 
+    /// <summary>
+    /// Construct with a given <see cref="IPersistedDataProtector"/>.
+    /// </summary>
+    /// <param name="provider"></param>
     public PersistedBase64Encryptor(IPersistedDataProtector provider) : base(provider)
     {
         _base64FormattingOptions = Base64FormattingOptions.InsertLineBreaks;
+    }
+
+    /// <summary>
+    /// Take the given <paramref name="base64StringAsBytes"/>, treating it as the byte array of a base 64 string and decode it to a plain byte array.
+    /// </summary>
+    /// <param name="base64StringAsBytes"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private byte[] FromBase64EncodedStringBytesToPlainBytes(byte[] base64StringAsBytes)
+    {
+        if (base64StringAsBytes == null) throw new ArgumentNullException(nameof(base64StringAsBytes));
+        var asBase64String = base64StringAsBytes.ToDefaultEncodingString();
+        return asBase64String.FromBase64String();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private byte[] ToBase64EncodedStringBytesFromPlainBytes(byte[] plainBytes)
+    {
+        if (plainBytes == null) throw new ArgumentNullException(nameof(plainBytes));
+        var base64String = plainBytes.ToBase64String();
+        return base64String.ToDefaultEncodingBytes();
+    }
+
+    public override byte[] ProtectString(string plainText)
+    {
+        var bytes = base.ProtectString(plainText);
+        return ToBase64EncodedStringBytesFromPlainBytes(bytes);
+    }
+
+    public override UnprotectResult UnprotectBytes(byte[] bytes)
+    {
+        var theBytes = FromBase64EncodedStringBytesToPlainBytes(bytes);
+        return base.UnprotectBytes(theBytes);
+    }
+
+    public override byte[] ProtectFileContents(string filePath)
+    {
+        var fileBytes = File.ReadAllBytes(filePath);
+        var protectedBytes = PersistedDataProtector.Protect(fileBytes);
+        return ToBase64EncodedStringBytesFromPlainBytes(protectedBytes);
+    }
+
+    public override byte[] ProtectBytes(byte[] bytes)
+    {
+        var theBytes = base.ProtectBytes(bytes);
+        return ToBase64EncodedStringBytesFromPlainBytes(theBytes);
     }
 
     public override UnprotectResult UnprotectFileContents(string filePath)

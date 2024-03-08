@@ -98,7 +98,7 @@ public class PersistedEncryptor : IPersistedEncryptor
         }
     }
 
-    public byte[] ProtectBytes(byte[] bytes)
+    public virtual byte[] ProtectBytes(byte[] bytes)
     {
         return PersistedDataProtector.Protect(bytes);
     }
