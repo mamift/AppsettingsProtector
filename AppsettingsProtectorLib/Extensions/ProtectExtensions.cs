@@ -8,6 +8,19 @@ namespace AppsettingsProtector.Extensions;
 public static class ProtectExtensions
 {
     /// <summary>
+    /// Create an <see cref="PersistedBase64Encryptor"/> from the current <see cref="IPersistedDataProtector"/>.
+    /// </summary>
+    /// <param name="dataProtector"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentNullException"></exception>
+    public static PersistedBase64Encryptor CreatePersistedBase64Encryptor(this IPersistedDataProtector dataProtector)
+    {
+        if (dataProtector == null) throw new ArgumentNullException(nameof(dataProtector));
+
+        return new PersistedBase64Encryptor(dataProtector);
+    }
+
+    /// <summary>
     /// Will instantiate a new instance of a data protector using the <see cref="IPersistedDataProtector"/> interface.
     /// </summary>
     /// <param name="provider"></param>
@@ -16,6 +29,9 @@ public static class ProtectExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IPersistedDataProtector CreatePersistedDataProtector(this IDataProtectionProvider provider, string purpose)
     {
+        if (provider == null) throw new ArgumentNullException(nameof(provider),
+            "Calling this extension method requires a non-null instance of an " + nameof(IDataProtectionProvider));
+
         return (IPersistedDataProtector)provider.CreateProtector(purpose);
     }
 
