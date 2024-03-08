@@ -44,15 +44,21 @@ public class PersistedBase64Encryptor: PersistedEncryptor, IPersistedBase64Encry
         return Convert.ToBase64String(baseInstance, _base64FormattingOptions);
     }
 
+    /// <summary>
+    /// Unprotect the given <paramref name="base64Text"/>. This will catch any <see cref="FormatException"/>s and return an empty byte array, which indicates that the given text is actually not encoded or encrypted.
+    /// </summary>
+    /// <param name="base64Text"></param>
+    /// <returns></returns>
     public UnprotectResult<string?> UnprotectBase64String(string base64Text)
     {
         byte[] bytesFromBase64String;
         try {
             bytesFromBase64String = Convert.FromBase64String(base64Text);
         }
-        catch {
+        catch (FormatException fe) {
             bytesFromBase64String = Array.Empty<byte>();
         }
+
         var unprotectResult = base.UnprotectBytes(bytesFromBase64String);
         return ResolveDecodedString(unprotectResult);
     }
