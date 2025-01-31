@@ -1,6 +1,8 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
 using AppsettingsProtector.Extensions;
 using Microsoft.AspNetCore.DataProtection;
 
@@ -19,12 +21,25 @@ public interface IEncryptor
     /// <param name="destinationFilePath">Optional; set this to a value to create an encrypted copy of the original.</param>
     void ProtectFileAndSave(string srcFilePath, string? destinationFilePath = null);
     /// <summary>
+    /// Protects the contents of the given <paramref name="srcFilePath"/> and saves it back to either the original file path (overwriting it) or an optional
+    /// <paramref name="destinationFilePath"/>.
+    /// </summary>
+    /// <param name="srcFilePath">The file whose contents are to be protected.</param>
+    /// <param name="destinationFilePath">Optional; set this to a value to create an encrypted copy of the original.</param>
+    Task ProtectFileAndSaveAsync(string srcFilePath, string? destinationFilePath = null);
+    /// <summary>
     /// Loads the contents of the given <paramref name="filePath"/> and returns an encrypted version of it.
     /// <para>THIS DOES NOT SAVE IT BACK TO THE FILE PATH.</para>
     /// </summary>
     /// <param name="filePath"></param>
     /// <returns></returns>
     byte[] ProtectFileContents(string filePath);
+    /// <summary>
+    /// Encrypts the given byte array and returns the encrypted version.
+    /// </summary>
+    /// <param name="bytes"></param>
+    /// <returns></returns>
+    byte[] ProtectBytes(byte[] bytes);
     /// <summary>
     /// Protect the given <paramref name="plainText"/> as an encrypted <see cref="byte"/> array.
     /// </summary>
@@ -83,6 +98,11 @@ public class PersistedEncryptor : IPersistedEncryptor
         }
     }
 
+    public virtual byte[] ProtectBytes(byte[] bytes)
+    {
+        return PersistedDataProtector.Protect(bytes);
+    }
+
     /// <summary>
     /// This will encode the given <paramref name="plainText"/> string as a byte array using <see cref="Encoding.GetBytes(char*,int,byte*,int)"/> method,
     /// choosing the <see cref="Encoding.Default"/> instance, which is OS-determined.
@@ -98,6 +118,10 @@ public class PersistedEncryptor : IPersistedEncryptor
 
     public virtual UnprotectResult UnprotectBytes(byte[] bytes)
     {
+        if (bytes.Equals(Array.Empty<byte>())) {
+            return UnprotectResult.WithError(new AppsettingsProtectorException("Not actually encrypted! (plaintext)"));
+        }
+
         try {
             return PersistedDataProtector.DangerousUnprotect(bytes);
         } 
@@ -125,5 +149,20 @@ public class PersistedEncryptor : IPersistedEncryptor
         var protectedBytes = ProtectFileContents(srcFilePath);
         var filePath = destinationFilePath ?? srcFilePath;
         File.WriteAllBytes(filePath, protectedBytes);
+    }
+
+    public virtual async Task ProtectFileAndSaveAsync(string srcFilePath, string? destinationFilePath = null)
+    {
+        using var fileStream = new FileStream(srcFilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+        var plainBytes = fileStream.ReadAsBytesToEnd();
+        var protectedBytes = ProtectBytes(plainBytes);
+        if (destinationFilePath == null) {
+            fileStream.ResetPosition();
+            fileStream.SetLength(0);
+            await fileStream.WriteAsync(protectedBytes, 0, protectedBytes.Length);
+            return;
+        }
+
+        File.WriteAllBytes(destinationFilePath, protectedBytes);
     }
 }

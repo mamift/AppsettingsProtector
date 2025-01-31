@@ -9,13 +9,15 @@ namespace ReferenceBlazorApp
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            
-            builder.Services.AddPersistedEncryptorWithDefaults(out var startupEncryptor);
-            builder.Configuration.AddEncryptedJsonFile(source => {
-                source.Path = "protectedSettings.json";
-                source.Encryptor = startupEncryptor;
-                source.TryEncryptOnDecryptFailure = true; // this is true anyway, but code is here to demonstrate the api exists
-            });
+
+            if (args.Contains("basic")) {
+                UseBasicDefaults(builder);
+            }
+            else {
+                PreDependencyInjectionUtilities.SetupSharedDataProtectionProvider(nameof(ReferenceBlazorApp));
+                PreDependencyInjectionUtilities.SetupEncryptedJsonFile(builder.Configuration, nameof(ReferenceBlazorApp), "protectedSettings.json",
+                    () => false);
+            }
 
             var secret = builder.Configuration["secret"];
             if (secret == null) {
@@ -55,6 +57,16 @@ namespace ReferenceBlazorApp
             app.MapFallbackToPage("/_Host");
 
             app.Run();
+        }
+
+        private static void UseBasicDefaults(WebApplicationBuilder builder)
+        {
+            builder.Services.AddPersistedEncryptorWithDefaults(out var startupEncryptor);
+            builder.Configuration.AddEncryptedJsonFile(source => {
+                source.Path = "protectedSettings.json";
+                source.Encryptor = startupEncryptor;
+                source.TryEncryptOnDecryptFailure = true; // this is true anyway, but code is here to demonstrate the api exists
+            });
         }
     }
 }
