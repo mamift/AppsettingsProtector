@@ -17,12 +17,11 @@
     <PackageTags>appsettings encryption protection decryption encrypt protect decrypt json settings configuration</PackageTags>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DebugType>embedded</DebugType>
+    <DebugType>portable</DebugType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugType>embedded</DebugType>
+    <DebugType>portable</DebugType>
   </PropertyGroup>
-
   <ItemGroup Condition="'$(TargetFramework)'=='net462' Or '$(TargetFramework)'=='net60'">
     <PackageReference Include="Microsoft.AspNetCore.DataProtection.Extensions" Version="6.0.36" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="6.0.1" />
