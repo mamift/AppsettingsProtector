@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
 using AppsettingsProtector.Extensions;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.VisualBasic;
 
 namespace AppsettingsProtector;
 
@@ -151,25 +154,62 @@ public class PersistedBase64Encryptor: PersistedEncryptor, IPersistedBase64Encry
 
     public override async Task ProtectFileAndSaveAsync(string srcFilePath, string? destinationFilePath = null)
     {
-        using var fileStream = new FileStream(srcFilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-        var plainBytes = fileStream.ReadAsBytesToEnd();
+        await ProtectFileAndSaveReleaseStreamAsync(srcFilePath, destinationFilePath);
+    }
+
+    protected async Task ProtectFileAndSaveReleaseStreamAsync(string srcFilePath, string? destinationFilePath = null, CancellationToken cancel = default)
+    {
+        var fileStream = new FileStream(path: srcFilePath, mode: FileMode.Open, access: FileAccess.ReadWrite, share: FileShare.Read);
+        byte[] plainBytes = Array.Empty<byte>();
+        using (fileStream) {
+            plainBytes = fileStream.ReadAsBytesToEnd();
+        }
         var protectedBytes = ProtectBytes(plainBytes);
         var base64 = Convert.ToBase64String(protectedBytes);
+        // File.WriteAllText(filePath, base64);
         var base64Bytes = base64.ToDefaultEncodingBytes();
+
         if (destinationFilePath == null) {
-            fileStream.ResetPosition();
-            fileStream.SetLength(0);
-            await fileStream.WriteAsync(base64Bytes, 0, base64Bytes.Length);
+            #if NET462
+            File.WriteAllBytes(srcFilePath, base64Bytes);
+#else
+            await File.WriteAllBytesAsync(srcFilePath, base64Bytes, cancel).ConfigureAwait(false);
+            #endif
             return;
         }
 
-        File.WriteAllBytes(destinationFilePath, protectedBytes);
+#if NET462
+        File.WriteAllBytes(destinationFilePath, base64Bytes);
+#else
+        await File.WriteAllBytesAsync(destinationFilePath, base64Bytes, cancel).ConfigureAwait(false);
+#endif
     }
 
-    public override void ProtectFileAndSave(string srcFilePath, string? destinationFilePath = null)
+    protected void ProtectFileAndSaveReleaseStream(string srcFilePath, string? destinationFilePath = null)
     {
-        using var fileStream = new FileStream(srcFilePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-        var plainBytes = fileStream.ReadAsBytesToEnd();
+        var fileStream = new FileStream(path: srcFilePath, mode: FileMode.Open, access: FileAccess.ReadWrite, share: FileShare.Read);
+        byte[] plainBytes = Array.Empty<byte>();
+        using (fileStream) {
+            plainBytes = fileStream.ReadAsBytesToEnd();
+        }
+        var protectedBytes = ProtectBytes(plainBytes);
+        var base64 = Convert.ToBase64String(protectedBytes);
+        // File.WriteAllText(filePath, base64);
+        var base64Bytes = base64.ToDefaultEncodingBytes();
+
+        if (destinationFilePath == null) {
+            File.WriteAllBytes(srcFilePath, base64Bytes);
+            return;
+        }
+
+        File.WriteAllBytes(destinationFilePath, base64Bytes);
+    }
+
+    [SuppressMessage("ReSharper", "UnusedMember.Global")]
+    protected void ProtectFileAndSaveRetainStream(string srcFilePath, string? destinationFilePath = null)
+    {
+        using var fileStream = new FileStream(path: srcFilePath, mode: FileMode.Open, access: FileAccess.ReadWrite, share: FileShare.Read);
+        byte[] plainBytes = fileStream.ReadAsBytesToEnd();
         var protectedBytes = ProtectBytes(plainBytes);
         var base64 = Convert.ToBase64String(protectedBytes);
         // File.WriteAllText(filePath, base64);
@@ -183,6 +223,12 @@ public class PersistedBase64Encryptor: PersistedEncryptor, IPersistedBase64Encry
         }
 
         File.WriteAllBytes(destinationFilePath, base64Bytes);
+    }
+
+    public override void ProtectFileAndSave(string srcFilePath, string? destinationFilePath = null)
+    {
+        //ProtectFileAndSaveRetainStream(srcFilePath, destinationFilePath);
+        ProtectFileAndSaveReleaseStream(srcFilePath, destinationFilePath);
     }
 
     public override void UnprotectFileAndSave(string srcFilePath, string? destinationFilePath = null)
