@@ -1,5 +1,7 @@
-﻿using System;
+﻿using OneOf;
+using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace AppsettingsProtector.Extensions;
 
@@ -8,6 +10,17 @@ namespace AppsettingsProtector.Extensions;
 /// </summary>
 public static class GeneralExtensions
 {
+    /// <summary>
+    /// Gets the possible exception that may have occured.
+    /// </summary>
+    /// <param name="result"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Exception? GetPossibleException(this OneOf<UnprotectResult, UnprotectResult<string?>> result)
+    {
+        return result.Match(r => r.Exception, gr => gr.Exception);
+    }
+
     /// <summary>
     /// Resets the position of the current stream.
     /// </summary>
