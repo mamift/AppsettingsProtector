@@ -1,5 +1,8 @@
-﻿using System;
+﻿using OneOf;
+using System;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace AppsettingsProtector.Extensions;
 
@@ -8,6 +11,30 @@ namespace AppsettingsProtector.Extensions;
 /// </summary>
 public static class GeneralExtensions
 {
+    /// <summary>
+    /// Takes a base64-encoded string and decodes it into another string.
+    /// </summary>
+    /// <param name="base64Str"></param>
+    /// <param name="encoding"></param>
+    /// <returns></returns>
+    public static string DecodeBase64StringAsString(this string base64Str, Encoding? encoding = default)
+    {
+        var bytes = Convert.FromBase64String(base64Str);
+        var decoded = bytes.ToEncodingString(encoding ?? Encoding.Default);
+        return decoded;
+    }
+
+    /// <summary>
+    /// Gets the possible exception that may have occured.
+    /// </summary>
+    /// <param name="result"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Exception? GetPossibleException(this OneOf<UnprotectResult, UnprotectResult<string?>> result)
+    {
+        return result.Match(r => r.Exception, gr => gr.Exception);
+    }
+
     /// <summary>
     /// Resets the position of the current stream.
     /// </summary>

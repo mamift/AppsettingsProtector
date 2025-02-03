@@ -88,6 +88,11 @@ public class PersistedBase64Encryptor: PersistedEncryptor, IPersistedBase64Encry
         return ToBase64EncodedStringBytesFromPlainBytes(protectedBytes);
     }
 
+    /// <summary>
+    /// Protects the bytes and encodes the encrypted bytes as base64, but returns it as a byte array.
+    /// </summary>
+    /// <param name="bytes"></param>
+    /// <returns></returns>
     public override byte[] ProtectBytes(byte[] bytes)
     {
         var theBytes = base.ProtectBytes(bytes);
@@ -165,23 +170,20 @@ public class PersistedBase64Encryptor: PersistedEncryptor, IPersistedBase64Encry
             plainBytes = fileStream.ReadAsBytesToEnd();
         }
         var protectedBytes = ProtectBytes(plainBytes);
-        var base64 = Convert.ToBase64String(protectedBytes);
-        // File.WriteAllText(filePath, base64);
-        var base64Bytes = base64.ToDefaultEncodingBytes();
 
         if (destinationFilePath == null) {
             #if NET462
-            File.WriteAllBytes(srcFilePath, base64Bytes);
+            File.WriteAllBytes(srcFilePath, protectedBytes);
 #else
-            await File.WriteAllBytesAsync(srcFilePath, base64Bytes, cancel).ConfigureAwait(false);
+            await File.WriteAllBytesAsync(srcFilePath, protectedBytes, cancel).ConfigureAwait(false);
             #endif
             return;
         }
 
 #if NET462
-        File.WriteAllBytes(destinationFilePath, base64Bytes);
+        File.WriteAllBytes(destinationFilePath, protectedBytes);
 #else
-        await File.WriteAllBytesAsync(destinationFilePath, base64Bytes, cancel).ConfigureAwait(false);
+        await File.WriteAllBytesAsync(destinationFilePath, protectedBytes, cancel).ConfigureAwait(false);
 #endif
     }
 
@@ -193,41 +195,17 @@ public class PersistedBase64Encryptor: PersistedEncryptor, IPersistedBase64Encry
             plainBytes = fileStream.ReadAsBytesToEnd();
         }
         var protectedBytes = ProtectBytes(plainBytes);
-        var base64 = Convert.ToBase64String(protectedBytes);
-        // File.WriteAllText(filePath, base64);
-        var base64Bytes = base64.ToDefaultEncodingBytes();
 
         if (destinationFilePath == null) {
-            File.WriteAllBytes(srcFilePath, base64Bytes);
+            File.WriteAllBytes(srcFilePath, protectedBytes);
             return;
         }
 
-        File.WriteAllBytes(destinationFilePath, base64Bytes);
-    }
-
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
-    protected void ProtectFileAndSaveRetainStream(string srcFilePath, string? destinationFilePath = null)
-    {
-        using var fileStream = new FileStream(path: srcFilePath, mode: FileMode.Open, access: FileAccess.ReadWrite, share: FileShare.Read);
-        byte[] plainBytes = fileStream.ReadAsBytesToEnd();
-        var protectedBytes = ProtectBytes(plainBytes);
-        var base64 = Convert.ToBase64String(protectedBytes);
-        // File.WriteAllText(filePath, base64);
-        fileStream.ResetPosition();
-        fileStream.SetLength(0);
-        var base64Bytes = base64.ToDefaultEncodingBytes();
-
-        if (destinationFilePath == null) {
-            fileStream.Write(base64Bytes, 0, base64Bytes.Length);
-            return;
-        }
-
-        File.WriteAllBytes(destinationFilePath, base64Bytes);
+        File.WriteAllBytes(destinationFilePath, protectedBytes);
     }
 
     public override void ProtectFileAndSave(string srcFilePath, string? destinationFilePath = null)
     {
-        //ProtectFileAndSaveRetainStream(srcFilePath, destinationFilePath);
         ProtectFileAndSaveReleaseStream(srcFilePath, destinationFilePath);
     }
 

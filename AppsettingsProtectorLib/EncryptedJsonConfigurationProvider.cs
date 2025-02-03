@@ -58,7 +58,7 @@ public class EncryptedJsonConfigurationProvider : FileConfigurationProvider
         string asString;
         // failed might be because it's not encrypted
         var successFlag = unprotectResult.Match(b => b.Success, s => s.Success);
-        Exception? possibleError = unprotectResult.Match(r => r.Exception, r => r.Exception);
+        Exception? possibleError = unprotectResult.GetPossibleException();
         if (!successFlag && (possibleError is FormatException || (possibleError is AppsettingsProtectorException &&
                                                                   possibleError.Message.StartsWith("Not actually encrypted")))) {
             asString = stream.ReadAsStringToEnd();
@@ -74,14 +74,13 @@ public class EncryptedJsonConfigurationProvider : FileConfigurationProvider
                 }
             }
             else {
-                var possibleException = unprotectResult.Match(b => b.Exception, s => s.Exception);
-                throw new AppsettingsProtectorException("Decryption failed!", possibleException);
+                throw new AppsettingsProtectorException("Decryption failed!", possibleError);
             }
         }
         else {
             string? matchedString = unprotectResult.Match(b => b.UnprotectedData.ToDefaultEncodingString(), s => s.UnprotectedData);
             if (matchedString == null) {
-                throw new AppsettingsProtectorException("Unable to decode string");
+                throw new AppsettingsProtectorException("Unable to decode string, see inner exception.", possibleError);
             }
             var _ = JsonNode.Parse(matchedString);
             asString = matchedString;

@@ -66,6 +66,18 @@ public static class ProtectExtensions
     }
 
     /// <summary>
+    /// Returns the given byte array as a string using the given <paramref name="encoding"/>.
+    /// </summary>
+    /// <param name="bytes"></param>
+    /// <param name="encoding"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string ToEncodingString(this byte[] bytes, Encoding encoding)
+    {
+        return encoding.GetString(bytes);
+    }
+
+    /// <summary>
     /// Returns the given byte array as a string using the <see cref="Encoding.Default"/> encoding.
     /// </summary>
     /// <param name="bytes"></param>
