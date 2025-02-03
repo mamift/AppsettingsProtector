@@ -124,7 +124,7 @@ public class PersistedEncryptor : IPersistedEncryptor
 
         try {
             return PersistedDataProtector.DangerousUnprotect(bytes);
-        } 
+        }
         catch (CryptographicException ce) {
             return UnprotectResult.WithError(ce);
         }
